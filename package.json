@@ -1,0 +1,33 @@
+{
+  "name": "webgl-demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "n",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.84.0"
+  },
+  "devDependencies": {
+    "css-loader": "^0.23.1",
+    "csswring": "^5.1.1",
+    "exports-loader": "^0.6.3",
+    "extend": "^3.0.0",
+    "gulp": "^3.9.1",
+    "gulp-connect": "^5.0.0",
+    "gulp-plumber": "^1.0.1",
+    "gulp-postcss": "^6.4.0",
+    "gulp-rev-hash": "0.0.2",
+    "gulp-webserver": "^0.9.1",
+    "postcss-import": "^9.1.0",
+    "run-sequence": "^1.1.5",
+    "style-loader": "^0.13.0",
+    "text-loader": "0.0.1",
+    "vinyl-named-with-path": "^1.0.0",
+    "webpack": "^1.12.2",
+    "webpack-stream": "^3.0.1"
+  }
+}
