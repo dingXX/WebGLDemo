@@ -1,3 +1,17 @@
+var vertexShaderSource =
+    "    attribute vec3 vertexPos;\n" +
+    "    uniform mat4 modelViewMatrix;\n" +
+    "uniform mat4 projectionMatrix;\n" +
+    "void main(void) {\n" +
+    "// 返回经过投影和变换的顶点值\n" +
+    "gl_Position = projectionMatrix * modelViewMatrix * \n" +
+    "vec4(vertexPos, 1.0);\n" +
+    "}\n";
+var fragmentShaderSource =
+    "    void main(void) {\n" +
+    " // 返回像素点的颜色:始终输出白色\n" +
+    "    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n" +
+    "}\n";
 /**
  * [initWebGL 从 canvas 中获取 WebGL 绘图上下文]
  * @param  {[type]} canvas [description]

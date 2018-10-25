@@ -1,4 +1,3 @@
 node_modules
-css-build
-scripts/dist
-css/dist
+web/scripts/dist
+web/css/dist

@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cuon-matrix-ts": "^1.1.0",
     "three": "^0.84.0"
   },
   "devDependencies": {

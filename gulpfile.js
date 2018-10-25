@@ -114,7 +114,7 @@ gulp.task('watchcss', function() {
 gulp.task('default', ['dev', 'webserver']);
 gulp.task('webserver', function() {
     connect.server({
-        host:'webgl.demo.com',
+        host:'127.0.0.1',
         root: 'web',
         port: 8888,
         livereload: true
