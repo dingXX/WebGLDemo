@@ -22,6 +22,7 @@ export default class Main {
         this.initObject();
         this.render();
         this.initEvent();
+
     }
     setRotateparams() {
         this.raycaster = new THREE.Raycaster(); //碰撞射线
@@ -152,6 +153,8 @@ export default class Main {
         var sub = this.movePoint.sub(this.startPoint); //计算转动向量
         var direction = this.targetRubik.getDirection(sub, this.normalize); //计算转动方向
         var cubeIndex = this.intersect.object.cubeIndex;
+        
+
         console.log(direction,'direction');
         console.log(cubeIndex,'cubeIndex');
         // this.resetRotateParams();
