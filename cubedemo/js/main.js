@@ -154,9 +154,9 @@ export default class Main {
         var direction = this.targetRubik.getDirection(sub, this.normalize); //计算转动方向
         var cubeIndex = this.intersect.object.cubeIndex;
         
-
-        console.log(direction,'direction');
-        console.log(cubeIndex,'cubeIndex');
+        // this.targetRubik.rotateMove02('leftMid', 1,()=>{
+        //     this.resetRotateParams();
+        // });
         // this.resetRotateParams();
         this.targetRubik.rotateMove(cubeIndex, direction,()=>{
             this.resetRotateParams();

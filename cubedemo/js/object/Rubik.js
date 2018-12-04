@@ -80,26 +80,6 @@ function createTransparencyMesh(cubeWidth) {
     return new THREE.Mesh(cubegeo, cubemat);
 }
 export default class Rubik {
-    judgeTurnFn = {
-        'front':function(cubeIndex){
-            return parseInt(cubeIndex/9) === 0;
-        },
-        'back':function(cubeIndex){
-            return parseInt(cubeIndex/9) === 2;
-        },
-        'left':function(cubeIndex){
-            return cubeIndex%3 === 0;
-        },
-        'right':function(cubeIndex){
-            return cubeIndex%3 === 2;
-        },
-        'up':function(cubeIndex){
-            return parseInt(cubeIndex%9/3) === 0;
-        },
-        'down':function(cubeIndex){
-            return parseInt(cubeIndex%9/3) === 2;
-        }
-    };
     constructor(main) {
         this.main = main;
         //默认转动动画时长
@@ -167,7 +147,7 @@ export default class Rubik {
         this.group.scale.set(percent, percent, percent);
         this.group.position.y = this.main.originHeight * (0.5 - percent / 2) * transformTag;
     }
-    updateCurLocalAxisInWorld(point) {
+    updateCurLocalAxisInWorld() {
         var center = new THREE.Vector3(0, 0, 0);
         var xPoint = new THREE.Vector3(1, 0, 0);
         var xPointAd = new THREE.Vector3(-1, 0, 0);
@@ -360,8 +340,6 @@ export default class Rubik {
         return boxs;
     }
     updateCubeIndex(elements) {
-        console.log('updateCubeIndex');
-        console.log(this.initStatus);
         for (var i = 0; i < elements.length; i++) {
             var temp1 = elements[i];
             for (var j = 0; j < this.initStatus.length; j++) {
@@ -485,7 +463,6 @@ export default class Rubik {
         var self = this;
         totalTime = totalTime ? totalTime : this.defaultTotalTime;
         var elements = this.getBoxs(cubeIndex, direction);
-        console.log(elements);
         requestAnimationFrame(function(timestamp) {
             self.rotateAnimation(elements, direction, timestamp, 0, 0, function() {
                 self.updateCubeIndex(elements);
@@ -494,66 +471,5 @@ export default class Rubik {
                 }
             }, totalTime);
         });
-    }
-    getTurnBoxs(gesture){
-        var elements = [];
-        var elementIndexs = [];
-        var judgeFn = this.judgeTurnFn[gesture];
-        if (!judgeFn) {
-            return [];
-        }
-        for (var i = 0; i < this.cubes.length; i++) {
-            var cube = this.cubes[i];
-            var cubeIndex = cube.cubeIndex - this.minCubeIndex;
-            if (judgeFn(cubeIndex)) {
-                elements.push(cube);
-                elementIndexs.push(cubeIndex);
-            }
-        }
-        console.log(elementIndexs);
-        return elements;
-    }
-    rotateMove02(gesture,isRevert, callback, totalTime){
-        var elements = this.getTurnBoxs(gesture);
-        totalTime = totalTime ? totalTime : this.defaultTotalTime;
-        requestAnimationFrame((timestamp) =>{
-            this.rotateAnimation02(elements, gesture,isRevert , timestamp, 0, 0, ()=> {
-                this.updateCubeIndex(elements);
-                if (callback) {
-                    callback();
-                }
-            }, totalTime);
-        });
-    }
-    rotateAnimation02(elements, gesture,isRevert, currentstamp, startstamp, laststamp, callback, totalTime){
-        var isAnimationEnd = false; //动画是否结束
-
-        if (startstamp === 0) {
-            startstamp = currentstamp;
-            laststamp = currentstamp;
-        }
-        if (currentstamp - startstamp >= totalTime) {
-            isAnimationEnd = true;
-            currentstamp = startstamp + totalTime;
-        }
-        var rotateMatrix = new THREE.Matrix4(); //旋转矩阵
-        var origin = new THREE.Vector3(0, 0, 0);
-        var xLine = new THREE.Vector3(1, 0, 0);
-        var yLine = new THREE.Vector3(0, 1, 0);
-        var zLine = new THREE.Vector3(0, 0, 1);
-
-
-        rotateMatrix = this.rotateAroundWorldAxis(origin, zLine, 90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
-
-        for (var i = 0; i < elements.length; i++) {
-            elements[i].applyMatrix(rotateMatrix);
-        }
-        if (!isAnimationEnd) {
-            requestAnimationFrame((timestamp) =>{
-                this.rotateAnimation02(elements, gesture,isRevert, timestamp, startstamp, currentstamp, callback, totalTime);
-            });
-        } else {
-            callback();
-        }
     }
 }
