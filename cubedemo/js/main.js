@@ -1,6 +1,6 @@
 import * as THREE from './three/build/three.js';
 // require('./three/build/OrbitControls.js');
-import BasicRubik from './object/Rubik.js';
+import BasicRubik from './object/Rubik02.js';
 import TouchLine from './object/TouchLine.js';
 const Context = canvas.getContext('webgl');
 console.log('Main');
@@ -151,16 +151,16 @@ export default class Main {
     rotateRubik() {
         this.isRotating = true; //转动标识置为true
         var sub = this.movePoint.sub(this.startPoint); //计算转动向量
-        var direction = this.targetRubik.getDirection(sub, this.normalize); //计算转动方向
+        // var direction = this.targetRubik.getDirection(sub, this.normalize); //计算转动方向
         var cubeIndex = this.intersect.object.cubeIndex;
-        
-        // this.targetRubik.rotateMove02('leftMid', 1,()=>{
-        //     this.resetRotateParams();
-        // });
-        // this.resetRotateParams();
-        this.targetRubik.rotateMove(cubeIndex, direction,()=>{
+        let {gesture,isAntiClock} = this.targetRubik.getGesture(sub,this.normalize,cubeIndex);
+        this.targetRubik.rotateMove(gesture, isAntiClock,()=>{
             this.resetRotateParams();
         });
+        // this.resetRotateParams();
+        // this.targetRubik.rotateMove(cubeIndex, direction,()=>{
+        //     this.resetRotateParams();
+        // });
         // var anotherIndex = cubeIndex - this.targetRubik.minCubeIndex + this.anotherRubik.minCubeIndex;
         // this.anotherRubik.rotateMove(anotherIndex, direction, function() {
         //     self.resetRotateParams();

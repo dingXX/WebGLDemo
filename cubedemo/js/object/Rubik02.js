@@ -99,39 +99,39 @@ function createTransparencyMesh(x,y,z,cubeWidth) {
 }
 
 export default class Rubik {
-    judgeTurnFn = {
-        'front':function(cubeIndex){
-            return parseInt(cubeIndex/9) === 0;
+    judgeTurnFnMap = {
+        'zLine':function(layerIndex,cubeIndex){
+            var num = BasicParams.layerNum*BasicParams.layerNum;
+            return parseInt(cubeIndex/num) === layerIndex;
         },
-        'back':function(cubeIndex){
-            return parseInt(cubeIndex/9) === 2;
+        'xLine':function(layerIndex,cubeIndex){
+            return cubeIndex%BasicParams.layerNum === layerIndex;
         },
-        'frontMid':function(cubeIndex){
-            return parseInt(cubeIndex/9) === 1;
+        'yLine':function(layerIndex,cubeIndex){
+            let num1 = BasicParams.layerNum;
+            let num2 =num1*num1;
+            return parseInt(cubeIndex%num2/num1) === layerIndex;
+        }
+    };
+    getLayerIndexFnMap = {
+        'zLine':function (cubeIndex) {
+            var num = BasicParams.layerNum*BasicParams.layerNum;
+            return parseInt(cubeIndex/num);
         },
-        'left':function(cubeIndex){
-            return cubeIndex%3 === 0;
+        'xLine':function(cubeIndex){
+            return cubeIndex%BasicParams.layerNum;
         },
-        'leftMid':function(cubeIndex){
-            return cubeIndex%3 === 1;
-        },
-        'right':function(cubeIndex){
-            return cubeIndex%3 === 2;
-        },
-        'up':function(cubeIndex){
-            return parseInt(cubeIndex%9/3) === 0;
-        },
-        'upMid':function(cubeIndex){
-            return parseInt(cubeIndex%9/3) === 1;
-        },
-        'down':function(cubeIndex){
-            return parseInt(cubeIndex%9/3) === 2;
+        'yLine':function(cubeIndex){
+            let num1 = BasicParams.layerNum;
+            let num2 =num1*num1;
+            return parseInt(cubeIndex%num2/num1);
         }
     };
     constructor(main) {
         this.main = main;
         //默认转动动画时长
         this.defaultTotalTime = 250;
+        this.origin = new THREE.Vector3(0,0,0);
         //魔方的六个转动方向
         this.xLine = new THREE.Vector3(1, 0, 0);
         this.xLineAd = new THREE.Vector3(-1, 0, 0);
@@ -244,28 +244,48 @@ export default class Rubik {
         return matrix4;
     }
     getTurnBoxs(gesture){
+        // gesture = 'xLine_0'
         var elements = [];
         var elementIndexs = [];
-        var judgeFn = this.judgeTurnFn[gesture];
+        let {direction,layerIndex} = this.parseGesture(gesture);
+        console.log(layerIndex,'layerIndex');
+        var judgeFn = this.judgeTurnFnMap[direction];
         if (!judgeFn) {
             return [];
         }
         for (var i = 0; i < this.cubes.length; i++) {
             var cube = this.cubes[i];
             var cubeIndex = cube.cubeIndex - this.minCubeIndex;
-            if (judgeFn(cubeIndex)) {
+            if (judgeFn(layerIndex,cubeIndex)) {
                 elements.push(cube);
                 elementIndexs.push(cubeIndex);
             }
         }
         return elements;
     }
-    rotateMove02(gesture,isAntiClock, callback, totalTime){
-        isAntiClock = isAntiClock?-1:1;
+    getTurnLineVector(gesture){
+        
+        let {direction} = this.parseGesture(gesture);
+        var lineVector;
+        switch(direction) {
+            case 'xLine':
+                lineVector = this.xLine;
+                break;
+            case 'zLine':
+                lineVector = this.zLine;
+                break;
+            case 'yLine':
+                lineVector = this.yLine;
+        }
+        return lineVector;
+    }
+    rotateMove(gesture,isAntiClock, callback, totalTime){
+        isAntiClock = isAntiClock?1:-1;
         var elements = this.getTurnBoxs(gesture);
+        var lineVector = this.getTurnLineVector(gesture);
         totalTime = totalTime ? totalTime : this.defaultTotalTime;
         requestAnimationFrame((timestamp) =>{
-            this.rotateAnimation02(elements, gesture,isAntiClock , timestamp, 0, 0, ()=> {
+            this.rotateAnimation(elements, lineVector,isAntiClock , timestamp, 0, 0, ()=> {
                 this.updateCubeIndex(elements);
                 if (callback) {
                     callback();
@@ -273,7 +293,7 @@ export default class Rubik {
             }, totalTime);
         });
     }
-    rotateAnimation02(elements, gesture,isAntiClock, currentstamp, startstamp, laststamp, callback, totalTime){
+    rotateAnimation(elements, lineVector,isAntiClock, currentstamp, startstamp, laststamp, callback, totalTime){
         var isAnimationEnd = false; //动画是否结束
 
         if (startstamp === 0) {
@@ -285,49 +305,90 @@ export default class Rubik {
             currentstamp = startstamp + totalTime;
         }
         var rotateMatrix = new THREE.Matrix4(); //旋转矩阵
-        var origin = new THREE.Vector3(0, 0, 0);
-        var xLine = new THREE.Vector3(1, 0, 0);
-        var yLine = new THREE.Vector3(0, 1, 0);
-        var zLine = new THREE.Vector3(0, 0, 1);
-        switch(gesture) {
-            case 'front':
-            case 'frontMid':
-            case 'back':
-                rotateMatrix = this.rotateAroundWorldAxis(origin, zLine, isAntiClock*90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
-                break;
-            case 'left':
-            case 'leftMid':
-            case 'right':
-                rotateMatrix = this.rotateAroundWorldAxis(origin, xLine, isAntiClock*90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
-                
-                break;
-            case 'up':
-            case 'upMid':
-            case 'down':
-                rotateMatrix = this.rotateAroundWorldAxis(origin, yLine, isAntiClock*90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
-                break;
-        }
-        
-
+        rotateMatrix = this.rotateAroundWorldAxis(this.origin, lineVector, isAntiClock*90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
         for (var i = 0; i < elements.length; i++) {
             elements[i].applyMatrix(rotateMatrix);
         }
         if (!isAnimationEnd) {
             requestAnimationFrame((timestamp) =>{
-                this.rotateAnimation02(elements, gesture,isAntiClock, timestamp, startstamp, currentstamp, callback, totalTime);
+                this.rotateAnimation(elements, lineVector,isAntiClock, timestamp, startstamp, currentstamp, callback, totalTime);
             });
         } else {
             callback();
         }
     }
-    getGesture(sub, normalize){
-
+    getGesture(sub,normalize,cubeIndex){
+        var localLines = {
+            x:this.xLine.clone(),
+            y:this.yLine.clone(),
+            z:this.zLine.clone()
+        };
+        var minAngle = Math.PI+1;
+        var normalizeLineType;
+        var normalizeLineValue;
+        var touchLineType;
+        var touchLineValue;
+        var direction;
+        var isAntiClock;
+        
+        for (let k in localLines) {
+            if (localLines.hasOwnProperty(k)) {
+                let localLine = localLines[k];
+                var normalizeAngle = normalize.angleTo(localLine);
+                // 法向量方向所在轴确定
+                if (normalizeAngle === Math.PI) {
+                    normalizeLineType = k;
+                    normalizeLineValue = 0;
+                }else if(normalizeAngle === 0){
+                    normalizeLineType = k;
+                    normalizeLineValue = 1;
+                }
+                // 滑动方向所在轴确定
+                var worldLine = this.getLocal2WorldVector(localLine);
+                let singleLineangle = sub.angleTo(worldLine);
+                let angle = Math.min(singleLineangle,Math.PI-singleLineangle);
+                if (angle<minAngle) {
+                    minAngle = angle;
+                    touchLineType = k;
+                    touchLineValue = (singleLineangle === angle)?1:0;
+                }
+            }
+        }
+        var lines = ['x','y','z','x'];
+        for (let i = 0; i < lines.length; i++) {
+            let isInclude = [touchLineType,normalizeLineType].includes(lines[i]);
+            if (!isInclude) {
+                direction = lines[i]+'Line';
+                break;
+            }
+        }
+        let touchLineIndex = lines.indexOf(touchLineType);
+        let isCondition = (normalizeLineType === lines[touchLineIndex+1])?0:1;
+        isAntiClock = (touchLineValue===normalizeLineValue)?isCondition:(+!isCondition);
+        let getLayerIndexFn = this.getLayerIndexFnMap[direction];
+        let layerIndex = getLayerIndexFn(cubeIndex-this.minCubeIndex);
+        let result = {
+            isAntiClock : isAntiClock,
+            gesture: this.stringifyGesture(direction,layerIndex)
+        }
+        console.log(result);
+        return result;
     }
     getLocal2WorldVector(point){
-        var center = new THREE.Vector3(0, 0, 0);
+        var center = this.origin.clone();
         var matrix = this.group.matrixWorld; //魔方的在世界坐标系的变换矩阵
         center.applyMatrix4(matrix);
         point.applyMatrix4(matrix);
         return point.sub(center);
+    }
+    parseGesture(gesture){
+        var obj = gesture.split('_');
+        return {
+            direction:obj[0],
+            layerIndex:+obj[1]
+        }
+    }
+    stringifyGesture(direction,layerIndex){
+        return direction + '_' + layerIndex;
     }
 }
