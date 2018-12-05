@@ -153,10 +153,11 @@ export default class Main {
         var sub = this.movePoint.sub(this.startPoint); //计算转动向量
         // var direction = this.targetRubik.getDirection(sub, this.normalize); //计算转动方向
         var cubeIndex = this.intersect.object.cubeIndex;
-        let {gesture,isAntiClock} = this.targetRubik.getGesture(sub,this.normalize,cubeIndex);
-        this.targetRubik.rotateMove(gesture, isAntiClock,()=>{
+        let gesture = this.targetRubik.getGesture(sub,this.normalize,cubeIndex);
+        this.targetRubik.rotateMove(gesture,()=>{
             this.resetRotateParams();
         });
+        this.anotherRubik.rotateMove(gesture);
         // this.resetRotateParams();
         // this.targetRubik.rotateMove(cubeIndex, direction,()=>{
         //     this.resetRotateParams();

@@ -18,10 +18,10 @@ const BasicParams = {
  * @return {[type]}           [description]
  */
 function createFace(rgbaColor) {
-    var canvas = document.createElement('canvas');
+    let canvas = document.createElement('canvas');
     canvas.width = 256;
     canvas.height = 256;
-    var context = canvas.getContext('2d');
+    let context = canvas.getContext('2d');
     //画一个宽高都是256的黑色正方形
     context.fillStyle = 'rgba(0,0,0,1)';
     context.fillRect(0, 0, 256, 256);
@@ -47,6 +47,7 @@ function createFace(rgbaColor) {
  */
 function createRubik(x, y, z, layerNum, cubeWidth, colors) {
     let cubes = [];
+    // 左上角的小方块的中心点位置
     let leftUpCx = x - (layerNum / 2 - 0.5) * cubeWidth;
     let leftUpCy = y + (layerNum / 2 - 0.5) * cubeWidth;
     let leftUpCz = z + (layerNum / 2 - 0.5) * cubeWidth;
@@ -55,8 +56,9 @@ function createRubik(x, y, z, layerNum, cubeWidth, colors) {
         // 一层9个
         // 材质
         for (let j = 0; j < layerNum * layerNum; j++) {
-            var materials = [];
-            for (var k = 0; k < 6; k++) {
+            // 生成材质贴片，每个面一个颜色
+            let materials = [];
+            for (let k = 0; k < 6; k++) {
                 let face = createFace(colors[k]);
                 let texture = new THREE.Texture(face);
                 texture.needsUpdate = true;
@@ -65,8 +67,9 @@ function createRubik(x, y, z, layerNum, cubeWidth, colors) {
                 });
                 materials.push(material);
             }
-
+            // 创建小方块形状
             let cubegeo = new THREE.BoxGeometry(cubeWidth, cubeWidth, cubeWidth);
+            // 生成小方块
             let cube = new THREE.Mesh(cubegeo, materials);
             //x,y,z为魔方中心的位置
             cube.position.x = leftUpCx + (j % layerNum) * cubeWidth;
@@ -79,77 +82,87 @@ function createRubik(x, y, z, layerNum, cubeWidth, colors) {
 }
 
 /**
- * [createTransparencyMesh 创建透明的外层正方体]
+ * [createTransparencyMesh 创建透明的外层正方体，主要是确定触摸时所在面]
  * @param  {[type]} cubeWidth 宽度
  * @return {[type]}           [description]
  */
-function createTransparencyMesh(x,y,z,cubeWidth) {
+function createTransparencyMesh(x, y, z, cubeWidth) {
     let cubegeo = new THREE.BoxGeometry(cubeWidth, cubeWidth, cubeWidth);
-    var hex = 0x000000;
-    var cubemat = new THREE.MeshBasicMaterial({
+    let cubemat = new THREE.MeshBasicMaterial({
         vertexColors: THREE.FaceColors,
         opacity: 0,
         transparent: true
     });
-    var cube = new THREE.Mesh(cubegeo, cubemat);
+    let cube = new THREE.Mesh(cubegeo, cubemat);
     cube.position.x = x;
     cube.position.y = y;
-    cube.position.z =z;
+    cube.position.z = z;
     return cube;
 }
 
 export default class Rubik {
+    // 判断小方块是否在对应层 函数map
     judgeTurnFnMap = {
-        'zLine':function(layerIndex,cubeIndex){
-            var num = BasicParams.layerNum*BasicParams.layerNum;
-            return parseInt(cubeIndex/num) === layerIndex;
+        'zLine': function(layerIndex, cubeIndex) {
+            let num = BasicParams.layerNum * BasicParams.layerNum;
+            return parseInt(cubeIndex / num) === layerIndex;
         },
-        'xLine':function(layerIndex,cubeIndex){
-            return cubeIndex%BasicParams.layerNum === layerIndex;
+        'xLine': function(layerIndex, cubeIndex) {
+            return cubeIndex % BasicParams.layerNum === layerIndex;
         },
-        'yLine':function(layerIndex,cubeIndex){
+        'yLine': function(layerIndex, cubeIndex) {
             let num1 = BasicParams.layerNum;
-            let num2 =num1*num1;
-            return parseInt(cubeIndex%num2/num1) === layerIndex;
+            let num2 = num1 * num1;
+            return parseInt(cubeIndex % num2 / num1) === layerIndex;
         }
     };
+    // 根据小方块的cubeIndex，确定它在对应轴层中的哪一层
     getLayerIndexFnMap = {
-        'zLine':function (cubeIndex) {
-            var num = BasicParams.layerNum*BasicParams.layerNum;
-            return parseInt(cubeIndex/num);
+        'zLine': function(cubeIndex) {
+            let num = BasicParams.layerNum * BasicParams.layerNum;
+            return parseInt(cubeIndex / num);
         },
-        'xLine':function(cubeIndex){
-            return cubeIndex%BasicParams.layerNum;
+        'xLine': function(cubeIndex) {
+            return cubeIndex % BasicParams.layerNum;
         },
-        'yLine':function(cubeIndex){
+        'yLine': function(cubeIndex) {
             let num1 = BasicParams.layerNum;
-            let num2 =num1*num1;
-            return parseInt(cubeIndex%num2/num1);
+            let num2 = num1 * num1;
+            return parseInt(cubeIndex % num2 / num1);
         }
     };
     constructor(main) {
         this.main = main;
         //默认转动动画时长
         this.defaultTotalTime = 250;
-        this.origin = new THREE.Vector3(0,0,0);
+        // 方块中心点？？ todo
+        this.origin = new THREE.Vector3(0, 0, 0);
         //魔方的六个转动方向
         this.xLine = new THREE.Vector3(1, 0, 0);
-        this.xLineAd = new THREE.Vector3(-1, 0, 0);
         this.yLine = new THREE.Vector3(0, 1, 0);
-        this.yLineAd = new THREE.Vector3(0, -1, 0);
         this.zLine = new THREE.Vector3(0, 0, 1);
-        this.zLineAd = new THREE.Vector3(0, 0, -1);
     }
-    model(type) {
+    /**
+     * [model 初始化魔方]
+     * @param  {string} type 魔方类型 front|back
+     * @return {[type]}      [description]
+     */
+    model(type = 'front') {
+        // 存放小方块的组
         this.group = new THREE.Group();
-        this.group.childType = type;
+        this.group.typeName = type;
+        // 初始状态下，对应的位置和cubeIndex
         this.initStatus = [];
-
-        this.cubes = createRubik(BasicParams.x, BasicParams.y, BasicParams.z, BasicParams.layerNum, BasicParams.cubeWidth, BasicParams.colors); //生成魔方小正方体
+        // 生成魔方小方块
+        this.cubes = createRubik(BasicParams.x, BasicParams.y, BasicParams.z, BasicParams.layerNum, BasicParams.cubeWidth, BasicParams.colors);
+        // 获取小方块的最小索引值
+        this.getMinCubeIndex();
+        console.log(this.minCubeIndex);
+        // 逐个小方块加入group
         for (var i = 0; i < this.cubes.length; i++) {
             var item = this.cubes[i];
             item.name = 'smallCube';
-            item.cubeIndex = item.id;
+            item.cubeIndex = item.id - this.minCubeIndex;
             // this.main.scene.add(item);
             /**
              * 由于筛选运动元素时是根据物体的id规律来的；
@@ -163,28 +176,33 @@ export default class Rubik {
                 x: item.position.x,
                 y: item.position.y,
                 z: item.position.z,
-                cubeIndex: item.id
+                cubeIndex: item.cubeIndex
             });
             this.group.add(item);
         }
-
-        this.group.typeName = type;
-        this.container = createTransparencyMesh(BasicParams.x, BasicParams.y, BasicParams.z,(BasicParams.cubeWidth + 1) * BasicParams.layerNum);
+        // 外层透明大方块
+        this.container = createTransparencyMesh(BasicParams.x, BasicParams.y, BasicParams.z, (BasicParams.cubeWidth + 1) * BasicParams.layerNum);
         this.container.name = 'coverCube';
         this.group.add(this.container);
-
         this.main.scene.add(this.group);
+
 
         //进行一定的旋转变换保证三个面可见
         if (type === 'front') {
-            this.group.rotateY(45 / 180 * Math.PI);
+            this.group.rotateY(-45 / 180 * Math.PI);
         } else if (type === 'back') {
-            this.group.rotateY((45 + 180) / 180 * Math.PI);
+            this.group.rotateY(-(45 + 180) / 180 * Math.PI);
         }
         // rotateOnAxis(axis,angle);
-        this.group.rotateOnAxis(new THREE.Vector3(1, 0, 1), 25 / 180 * Math.PI);
-        this.getMinCubeIndex();
+        this.group.rotateOnAxis(new THREE.Vector3(1, 0, -1), 25 / 180 * Math.PI);
+        
     }
+    /**
+     * [resizeHeight 设置魔法在场景中的大小位置]
+     * @param  {} percent      [缩放比]
+     * @param  {[type]} transformTag [对应位置 1 -1]
+     * @return {[type]}              [description]
+     */
     resizeHeight(percent, transformTag) {
         if (percent < this.main.minPercent) {
             percent = this.main.minPercent;
@@ -201,10 +219,11 @@ export default class Rubik {
      * @return {[type]}          [description]
      */
     updateCubeIndex(elements) {
-        for (var i = 0; i < elements.length; i++) {
-            var temp1 = elements[i];
-            for (var j = 0; j < this.initStatus.length; j++) {
-                var temp2 = this.initStatus[j];
+        for (let i = 0; i < elements.length; i++) {
+            let temp1 = elements[i];
+            for (let j = 0; j < this.initStatus.length; j++) {
+                let temp2 = this.initStatus[j];
+                // 位置相等的时候，就认为这是小方块新位置索引cubeIndex
                 if (Math.abs(temp1.position.x - temp2.x) <= BasicParams.cubeWidth / 2 &&
                     Math.abs(temp1.position.y - temp2.y) <= BasicParams.cubeWidth / 2 &&
                     Math.abs(temp1.position.z - temp2.z) <= BasicParams.cubeWidth / 2) {
@@ -217,13 +236,21 @@ export default class Rubik {
     /**
      * 获取最小索引值
      */
+
     getMinCubeIndex() {
-        var ids = [];
-        for (var i = 0; i < this.cubes.length; i++) {
-            ids.push(this.cubes[i].cubeIndex);
+        let ids = [];
+        for (let i = 0; i < this.cubes.length; i++) {
+            ids.push(this.cubes[i].id);
         }
         this.minCubeIndex = Math.min.apply(null, ids);
     }
+    /**
+     * [rotateAroundWorldAxis 获取实际的转动矩阵]
+     * @param  {[type]} p      [description]
+     * @param  {[type]} vector [description]
+     * @param  {[type]} rad    [description]
+     * @return {[type]}        [description]
+     */
     rotateAroundWorldAxis(p, vector, rad) {
         vector.normalize();
         var u = vector.x;
@@ -243,31 +270,45 @@ export default class Rubik {
 
         return matrix4;
     }
-    getTurnBoxs(gesture){
+    /**
+     * [getTurnBoxs 获取转动的小方块]
+     * @param  {[type]} gesture [对应的手势]
+     * @return {[type]}         [description]
+     */
+    getTurnBoxs(gesture) {
         // gesture = 'xLine_0'
-        var elements = [];
-        var elementIndexs = [];
-        let {direction,layerIndex} = this.parseGesture(gesture);
-        console.log(layerIndex,'layerIndex');
-        var judgeFn = this.judgeTurnFnMap[direction];
+        // 存放转动小方块的数组
+        let elements = [];
+        let elementIndexs = [];
+        // 获取转动的轴，和层级
+        let {
+            turnAxis,
+            layerIndex
+        } = this.parseGesture(gesture);
+        // 获取判断函数
+        let judgeFn = this.judgeTurnFnMap[turnAxis];
         if (!judgeFn) {
             return [];
         }
-        for (var i = 0; i < this.cubes.length; i++) {
-            var cube = this.cubes[i];
-            var cubeIndex = cube.cubeIndex - this.minCubeIndex;
-            if (judgeFn(layerIndex,cubeIndex)) {
+
+        for (let i = 0; i < this.cubes.length; i++) {
+            let cube = this.cubes[i];
+            let cubeIndex = cube.cubeIndex;
+            if (judgeFn(layerIndex, cubeIndex)) {
                 elements.push(cube);
                 elementIndexs.push(cubeIndex);
             }
         }
         return elements;
     }
-    getTurnLineVector(gesture){
-        
-        let {direction} = this.parseGesture(gesture);
-        var lineVector;
-        switch(direction) {
+    // 根据手势获取绕旋转的轴
+    getTurnLineVector(gesture) {
+
+        let {
+            turnAxis
+        } = this.parseGesture(gesture);
+        let lineVector;
+        switch (turnAxis) {
             case 'xLine':
                 lineVector = this.xLine;
                 break;
@@ -279,13 +320,28 @@ export default class Rubik {
         }
         return lineVector;
     }
-    rotateMove(gesture,isAntiClock, callback, totalTime){
-        isAntiClock = isAntiClock?1:-1;
-        var elements = this.getTurnBoxs(gesture);
-        var lineVector = this.getTurnLineVector(gesture);
+    /**
+     * [rotateMove 旋转移动]
+     * @param  {}   gesture     手势
+     * @param  {Function} callback    回调函数
+     * @param  {[type]}   totalTime   动画时间
+     * @return {[type]}               [description]
+     */
+    rotateMove(gesture, callback, totalTime) {
+        let {
+            isAntiClock
+        } = this.parseGesture(gesture);
+        isAntiClock = isAntiClock ? 1 : -1;
+        // 获取旋转的小方块
+        let elements = this.getTurnBoxs(gesture);
+        // 旋转方向轴
+        let lineVector = this.getTurnLineVector(gesture);
+        // 动画时间
         totalTime = totalTime ? totalTime : this.defaultTotalTime;
-        requestAnimationFrame((timestamp) =>{
-            this.rotateAnimation(elements, lineVector,isAntiClock , timestamp, 0, 0, ()=> {
+        requestAnimationFrame((timestamp) => {
+            // 旋转动效
+            this.rotateAnimation(elements, lineVector, isAntiClock, timestamp, 0, 0, () => {
+                // 完成后更新小方块索引值
                 this.updateCubeIndex(elements);
                 if (callback) {
                     callback();
@@ -293,10 +349,23 @@ export default class Rubik {
             }, totalTime);
         });
     }
-    rotateAnimation(elements, lineVector,isAntiClock, currentstamp, startstamp, laststamp, callback, totalTime){
+    /**
+     * [rotateAnimation 旋转动画]
+     * @param  {[type]}   elements     [旋转小方块]
+     * @param  {[type]}   lineVector   [旋转轴]
+     * @param  {Boolean}  isAntiClock  [旋转方向]
+     * @param  {[type]}   currentstamp [当前时间]
+     * @param  {[type]}   startstamp   [开始时间]
+     * @param  {[type]}   laststamp    [上一次的时间]
+     * @param  {Function} callback     [回调函数]
+     * @param  {[type]}   totalTime    [总时间]
+     * @return {[type]}                [description]
+     */
+    rotateAnimation(elements, lineVector, isAntiClock, currentstamp, startstamp, laststamp, callback, totalTime) {
         var isAnimationEnd = false; //动画是否结束
 
         if (startstamp === 0) {
+            // 起始时间赋值
             startstamp = currentstamp;
             laststamp = currentstamp;
         }
@@ -305,90 +374,137 @@ export default class Rubik {
             currentstamp = startstamp + totalTime;
         }
         var rotateMatrix = new THREE.Matrix4(); //旋转矩阵
-        rotateMatrix = this.rotateAroundWorldAxis(this.origin, lineVector, isAntiClock*90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
-        for (var i = 0; i < elements.length; i++) {
+        rotateMatrix = this.rotateAroundWorldAxis(this.origin, lineVector, isAntiClock * 90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+
+        for (let i = 0; i < elements.length; i++) {
             elements[i].applyMatrix(rotateMatrix);
         }
         if (!isAnimationEnd) {
-            requestAnimationFrame((timestamp) =>{
-                this.rotateAnimation(elements, lineVector,isAntiClock, timestamp, startstamp, currentstamp, callback, totalTime);
+            requestAnimationFrame((timestamp) => {
+                this.rotateAnimation(elements, lineVector, isAntiClock, timestamp, startstamp, currentstamp, callback, totalTime);
             });
         } else {
             callback();
         }
     }
-    getGesture(sub,normalize,cubeIndex){
-        var localLines = {
-            x:this.xLine.clone(),
-            y:this.yLine.clone(),
-            z:this.zLine.clone()
+    /**
+     * [getGesture 获取手势]
+     * @param  {[type]} sub       [滑动的向量]
+     * @param  {[type]} normalize [触摸面的法向量]
+     * @param  {[type]} cubeIndex [触摸的小方块索引值]
+     * @return {[type]}           [description]
+     */
+    getGesture(sub, normalize, cubeIndex) {
+        // 因为getLocal2WorldVector会改变参数值，所以用clone
+        // 本地坐标轴方向
+        let localLines = {
+            x: this.xLine.clone(),
+            y: this.yLine.clone(),
+            z: this.zLine.clone()
         };
-        var minAngle = Math.PI+1;
-        var normalizeLineType;
-        var normalizeLineValue;
-        var touchLineType;
-        var touchLineValue;
-        var direction;
-        var isAntiClock;
-        
+        // sub 和各轴之间的夹角最小值 夹角不过PI
+        let minAngle = Math.PI + 1;
+        // 法向量的轴类型
+        let normalizeLineType;
+        // 法向量的轴方向
+        let normalizeLineValue;
+        // 触摸向量的最近轴
+        let touchLineType;
+        // 触摸向量的轴方向
+        let touchLineValue;
+        // 旋转轴
+        let turnAxis;
+        // 是否逆时针
+        let isAntiClock;
+
         for (let k in localLines) {
             if (localLines.hasOwnProperty(k)) {
                 let localLine = localLines[k];
-                var normalizeAngle = normalize.angleTo(localLine);
+                // 法向量和轴向量的夹角为0或PI，则认为法向量在对应轴上
+                let normalizeAngle = normalize.angleTo(localLine);
                 // 法向量方向所在轴确定
                 if (normalizeAngle === Math.PI) {
                     normalizeLineType = k;
                     normalizeLineValue = 0;
-                }else if(normalizeAngle === 0){
+                } else if (normalizeAngle === 0) {
                     normalizeLineType = k;
                     normalizeLineValue = 1;
                 }
                 // 滑动方向所在轴确定
-                var worldLine = this.getLocal2WorldVector(localLine);
+                let worldLine = this.getLocal2WorldVector(localLine);
+                // 单个轴和滑动向量的夹角
                 let singleLineangle = sub.angleTo(worldLine);
-                let angle = Math.min(singleLineangle,Math.PI-singleLineangle);
-                if (angle<minAngle) {
+                // 夹角和补角的最小值
+                let angle = Math.min(singleLineangle, Math.PI - singleLineangle);
+                if (angle < minAngle) {
+                    // 确定最小夹角所在的轴和方向
                     minAngle = angle;
                     touchLineType = k;
-                    touchLineValue = (singleLineangle === angle)?1:0;
+                    touchLineValue = (singleLineangle === angle) ? 1 : 0;
                 }
             }
         }
-        var lines = ['x','y','z','x'];
+
+        let lines = ['x', 'y', 'z', 'x'];
         for (let i = 0; i < lines.length; i++) {
-            let isInclude = [touchLineType,normalizeLineType].includes(lines[i]);
+            // 滑动向量所在轴和法向量所在轴以外的轴就是旋转轴
+            let isInclude = [touchLineType, normalizeLineType].includes(lines[i]);
             if (!isInclude) {
-                direction = lines[i]+'Line';
+                turnAxis = lines[i] + 'Line';
                 break;
             }
         }
+        // 枚举得到的情况表
+        // touchLine normalizeLine isAntiClock(逆方向旋转)
+        // x y         y z         z x     
+        // 1 1 0       1 1 0       1 1 0       
+        // 1 0 1       1 0 1       1 0 1 
+        // 0 1 1       0 1 1       0 1 1
+        // 0 0 0       0 0 0       0 0 0
+        // x z         y x         z y
+        // 1 1 1       1 1 1       1 1 1
+        // 1 0 0       1 0 0       1 0 0
+        // 0 1 0       0 1 0       0 1 0
+        // 0 0 1       0 0 1       0 0 1
+        // 找到滑动向量所在轴的索引
         let touchLineIndex = lines.indexOf(touchLineType);
-        let isCondition = (normalizeLineType === lines[touchLineIndex+1])?0:1;
-        isAntiClock = (touchLineValue===normalizeLineValue)?isCondition:(+!isCondition);
-        let getLayerIndexFn = this.getLayerIndexFnMap[direction];
-        let layerIndex = getLayerIndexFn(cubeIndex-this.minCubeIndex);
-        let result = {
-            isAntiClock : isAntiClock,
-            gesture: this.stringifyGesture(direction,layerIndex)
-        }
-        console.log(result);
-        return result;
+        // 如果“法向量所在轴”是“滑动向量所在轴”的下一个，则规律满足条件1 xy/yz/zx
+        let isCondition = (normalizeLineType === lines[touchLineIndex + 1]) ? 0 : 1;
+        // 规律
+        isAntiClock = (touchLineValue === normalizeLineValue) ? isCondition : (+!isCondition);
+        // 根据已知的旋转轴和小方块索引，确定旋转层
+        let getLayerIndexFn = this.getLayerIndexFnMap[turnAxis];
+        let layerIndex = getLayerIndexFn(cubeIndex);
+        let gesture = this.stringifyGesture(turnAxis, layerIndex, isAntiClock);
+        return gesture;
     }
-    getLocal2WorldVector(point){
-        var center = this.origin.clone();
-        var matrix = this.group.matrixWorld; //魔方的在世界坐标系的变换矩阵
+    /**
+     * [getLocal2WorldVector 从本地坐标转为世界坐标]
+     * @param  {[type]} point [本地坐标]
+     * @return {[type]}       [description]
+     */
+    getLocal2WorldVector(point) {
+        let center = this.origin.clone();
+        let matrix = this.group.matrixWorld; //魔方的在世界坐标系的变换矩阵
         center.applyMatrix4(matrix);
         point.applyMatrix4(matrix);
         return point.sub(center);
     }
-    parseGesture(gesture){
-        var obj = gesture.split('_');
+    /**
+     * [parseGesture 解压手势]
+     * @param  {[type]} gesture [description]
+     * @return {[type]}         [description]
+     */
+    parseGesture(gesture) {
+        let obj = gesture.split('_');
         return {
-            direction:obj[0],
-            layerIndex:+obj[1]
+            turnAxis: obj[0],
+            layerIndex: +obj[1],
+            isAntiClock: +obj[2]
         }
     }
-    stringifyGesture(direction,layerIndex){
-        return direction + '_' + layerIndex;
+    stringifyGesture(turnAxis, layerIndex, isAntiClock) {
+        let obj = [turnAxis, layerIndex, +isAntiClock];
+        return obj.join('_');
     }
 }
