@@ -2,8 +2,8 @@ import * as THREE from './three/build/three.js';
 // require('./three/build/OrbitControls.js');
 import BasicRubik from './object/Rubik02.js';
 import TouchLine from './object/TouchLine.js';
+import TWEEN from './tween/Tween.js';
 const Context = canvas.getContext('webgl');
-console.log('Main');
 export default class Main {
     constructor() {
         this.context = Context; //绘图上下文
@@ -21,7 +21,6 @@ export default class Main {
         this.initLight();
         this.initObject();
         this.render();
-        this.initEvent();
 
     }
     setRotateparams() {
@@ -68,7 +67,6 @@ export default class Main {
     initObject() {
         this.originHeight = Math.tan(22.5 / 180 * Math.PI) * this.camera.position.z * 2;
         this.originWidth = this.originHeight * this.camera.aspect;
-        console.log(this.originHeight);
         this.frontRubik = new BasicRubik(this);
         this.frontTypeName = 'front';
         this.frontRubik.model(this.frontTypeName);
@@ -76,7 +74,10 @@ export default class Main {
         this.backTypeName = 'back';
         this.backRubik.model(this.backTypeName);
         this.touchLine = new TouchLine(this);
-        this.rubikResize(0.5);
+        this.rubikResize(1-this.minPercent);
+        
+        this.enterAnimation();
+
     }
     render() {
         this.renderer.clear();
@@ -108,6 +109,7 @@ export default class Main {
                 this.startPoint = this.intersect?this.intersect.point:(new THREE.Vector2(touch.clientX,touch.clientY));
             }
         }
+
     }
     /**
      * 触摸移动
@@ -178,6 +180,74 @@ export default class Main {
         // this.anotherRubik.rotateMove(anotherIndex, direction, function() {
         //     self.resetRotateParams();
         // });
+    };
+    enterAnimation(){
+        let isAnimationEnd = false;
+        let group = this.frontRubik.group;
+        let endStatus = {
+            rotateY :group.rotation.y,
+            y:group.position.y,
+            z:group.position.z
+        };
+        // 重新设置位置
+        group.rotation.y+=(Math.PI/2);
+        group.position.y += this.originHeight/3;
+        group.position.z -=350;
+        let startStatus = {
+            rotateY :group.rotation.y,
+            y:group.position.y,
+            z:group.position.z
+        };
+        var tween = new TWEEN.Tween(startStatus)
+                    .to(endStatus,1500)
+                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .onUpdate(function(){
+                        group.rotation.y = startStatus.rotateY;
+                        group.position.y = startStatus.y;
+                        group.position.z = startStatus.z;
+                    }).onComplete(()=>{
+                        isAnimationEnd = true;
+                    });
+        
+        function animate(time){
+            if (!isAnimationEnd) {
+                TWEEN.update(time);
+
+                requestAnimationFrame(animate);
+            }
+        }
+        // tween.start();
+
+        setTimeout(()=>{
+            tween.start();
+            requestAnimationFrame(animate);
+        },500);
+        this.randomRubik(()=>{
+            this.initEvent();
+        });
+
+        
+
+    }
+    randomRubik(cb){
+        let gestureList = this.frontRubik.getRandomGestureList();
+        let gesture = gestureList.shift();
+        let that = this;
+        let rotateFn = function(gesture){
+            that.frontRubik.rotateMove(gesture,0,100);
+            that.backRubik.rotateMove(gesture,()=>{
+                gesture = gestureList.shift();
+               
+                if (gesture) {
+                    rotateFn(gesture);
+                }else{
+                    if (typeof cb === 'function') {
+                        cb();
+                    }
+                }
+            },100);
+        }
+        rotateFn(gesture);
     };
     /**
      * 重置魔方转动参数

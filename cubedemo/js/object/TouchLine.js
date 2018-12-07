@@ -29,7 +29,7 @@ export default class TouchLine {
             that.plane = new THREE.Mesh(geometry, material);
             that.plane.position.set(0, 0, 0);
             that.main.scene.add(that.plane);
-            // that.defaultPosition();
+            that.defaultPosition();
         }, function(xhr) {
             console.log((xhr.loaded / xhr.total * 100) + '% loaded');
         }, function(xhr) {

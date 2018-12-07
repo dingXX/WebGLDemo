@@ -131,6 +131,7 @@ export default class Rubik {
             return parseInt(cubeIndex % num2 / num1);
         }
     };
+
     constructor(main) {
         this.main = main;
         //默认转动动画时长
@@ -141,6 +142,21 @@ export default class Rubik {
         this.xLine = new THREE.Vector3(1, 0, 0);
         this.yLine = new THREE.Vector3(0, 1, 0);
         this.zLine = new THREE.Vector3(0, 0, 1);
+        this.params = Object.assign(BasicParams);
+        this.ThirdGestureMap = {
+            'F':this.stringifyGesture('zLine',0,0),
+            'FA':this.stringifyGesture('zLine',0,1),
+            'B':this.stringifyGesture('zLine',2,1),
+            'BA':this.stringifyGesture('zLine',2,0),
+            'U':this.stringifyGesture('yLine',0,0),
+            'UA':this.stringifyGesture('yLine',0,1),
+            'D':this.stringifyGesture('yLine',2,1),
+            'DA':this.stringifyGesture('yLine',2,0),
+            'R':this.stringifyGesture('xLine',0,0),
+            'RA':this.stringifyGesture('xLine',0,1),
+            'L':this.stringifyGesture('xLine',2,1),
+            'LA':this.stringifyGesture('xLine',2,0),
+        };
     }
     /**
      * [model 初始化魔方]
@@ -194,7 +210,6 @@ export default class Rubik {
         }
         // rotateOnAxis(axis,angle);
         this.group.rotateOnAxis(new THREE.Vector3(1, 0, 1), 25 / 180 * Math.PI);
-        
     }
     /**
      * [resizeHeight 设置魔法在场景中的大小位置]
@@ -540,6 +555,26 @@ export default class Rubik {
         point.applyMatrix4(matrix);
         return point.sub(center);
     }
+    getRandomGestureList() {
+        let {layerNum} = this.params;
+        let turnAxisArr = ['xLine','yLine','zLine'];
+        let randomGestureList = [];
+        for (let i = 0; i < layerNum*7 ; i++) {
+            let turnIndex = Math.floor(Math.random()*3);
+            let turnAxis = turnAxisArr[turnIndex];
+            let isAntiClock = Math.round(Math.random());
+            let turnLayerNum = Math.floor(Math.random()*layerNum);
+            if (turnLayerNum === Math.floor(layerNum/2)) {
+                // 通常单数魔方是不转中心那一层的
+                turnLayerNum = 0;
+            }
+            let gesture = this.stringifyGesture(turnAxis,turnLayerNum,isAntiClock);
+            randomGestureList.push(gesture);
+        }
+        console.log(randomGestureList);
+        return randomGestureList;
+    }
+
     /**
      * [parseGesture 解压手势]
      * @param  {[type]} gesture [description]
