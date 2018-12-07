@@ -103,9 +103,9 @@ export default class Main {
         } else {
             this.getIntersects(touch);
             //触摸点在魔方上且魔方没有转动
-            if (!this.isRotating && this.intersect) {
+            if (!this.isRotating) {
                 //开始转动，设置起始点
-                this.startPoint = this.intersect.point;
+                this.startPoint = this.intersect?this.intersect.point:(new THREE.Vector2(touch.clientX,touch.clientY));
             }
         }
     }
@@ -128,16 +128,20 @@ export default class Main {
     touchEnd(event) {
         this.touchLine.disable();
         var touch = event.changedTouches[0];
+
         // console.log(touch);
         // 滑动点在魔方上且魔方没有转动
-        if (!this.isRotating && this.startPoint) {
-            this.getIntersects(touch);
+        if (!this.isRotating && this.startPoint && this.targetRubik) {
+            let rubikTypeName = this.getIntersects(touch);
             if (!this.intersect) {
-                return;
+                this.movePoint = new THREE.Vector2(touch.clientX,touch.clientY);
+            }else{
+                this.movePoint = this.intersect.point;
+
             }
-            this.movePoint = this.intersect.point;
+            // this.movePoint = touch;
             if (!this.movePoint.equals(this.startPoint)) { //触摸点和滑动点不一样则意味着可以得到转动向量
-                this.rotateRubik();
+                this.rotateRubik(rubikTypeName);
             }
         }
     }
@@ -148,12 +152,20 @@ export default class Main {
         this.frontRubik.resizeHeight(frontPercent, 1);
         this.backRubik.resizeHeight(1 - frontPercent, -1);
     }
-    rotateRubik() {
+    rotateRubik(rubikTypeName) {
         this.isRotating = true; //转动标识置为true
         var sub = this.movePoint.sub(this.startPoint); //计算转动向量
         // var direction = this.targetRubik.getDirection(sub, this.normalize); //计算转动方向
-        var cubeIndex = this.intersect.object.cubeIndex;
-        let gesture = this.targetRubik.getGesture(sub,this.normalize,cubeIndex);
+        let gesture ;
+        if (this.intersect) {
+            var cubeIndex = this.intersect.object.cubeIndex;
+            gesture = this.targetRubik.getGesture(sub,this.normalize,cubeIndex);
+        }else{
+            // 因为屏幕的坐标是左上角是原点，向上滑的时候，y会是负值
+            sub.setY(-1*sub.y);
+            gesture = this.targetRubik.getWholeGesture(sub,rubikTypeName);
+
+        }
         this.targetRubik.rotateMove(gesture,()=>{
             this.resetRotateParams();
         });
@@ -224,5 +236,6 @@ export default class Main {
                 this.normalize = intersects[0].face.normal;
             }
         }
+        return rubikTypeName;
     }
 }

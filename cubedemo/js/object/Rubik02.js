@@ -157,7 +157,6 @@ export default class Rubik {
         this.cubes = createRubik(BasicParams.x, BasicParams.y, BasicParams.z, BasicParams.layerNum, BasicParams.cubeWidth, BasicParams.colors);
         // 获取小方块的最小索引值
         this.getMinCubeIndex();
-        console.log(this.minCubeIndex);
         // 逐个小方块加入group
         for (var i = 0; i < this.cubes.length; i++) {
             var item = this.cubes[i];
@@ -189,12 +188,12 @@ export default class Rubik {
 
         //进行一定的旋转变换保证三个面可见
         if (type === 'front') {
-            this.group.rotateY(-45 / 180 * Math.PI);
+            this.group.rotateY(45 / 180 * Math.PI);
         } else if (type === 'back') {
-            this.group.rotateY(-(45 + 180) / 180 * Math.PI);
+            this.group.rotateY((45 + 180) / 180 * Math.PI);
         }
         // rotateOnAxis(axis,angle);
-        this.group.rotateOnAxis(new THREE.Vector3(1, 0, -1), 25 / 180 * Math.PI);
+        this.group.rotateOnAxis(new THREE.Vector3(1, 0, 1), 25 / 180 * Math.PI);
         
     }
     /**
@@ -286,11 +285,13 @@ export default class Rubik {
             layerIndex
         } = this.parseGesture(gesture);
         // 获取判断函数
+        if (layerIndex === -1) {
+            return this.cubes;
+        }
         let judgeFn = this.judgeTurnFnMap[turnAxis];
         if (!judgeFn) {
             return [];
         }
-
         for (let i = 0; i < this.cubes.length; i++) {
             let cube = this.cubes[i];
             let cubeIndex = cube.cubeIndex;
@@ -476,6 +477,55 @@ export default class Rubik {
         let getLayerIndexFn = this.getLayerIndexFnMap[turnAxis];
         let layerIndex = getLayerIndexFn(cubeIndex);
         let gesture = this.stringifyGesture(turnAxis, layerIndex, isAntiClock);
+        return gesture;
+    }
+    getWholeGesture(sub,typeName){
+        let angle = sub.angle();
+        angle = angle/Math.PI*180+30;
+        if (angle>=360) {
+            angle = angle-360;
+        }
+        let turnAxis;
+        let isAntiClock;
+        let layerIndex = '-1';
+        switch(true) {
+            case angle>=0&&angle<=60:
+                // 3点方向
+                turnAxis = 'yLine';
+                isAntiClock = 1;
+                break;
+            case angle>180&&angle<=240:
+                // 9点方向
+                turnAxis = 'yLine';
+                isAntiClock = 0;
+                break;
+            case angle>60&&angle<=120:
+                // 2点方向
+                turnAxis = 'zLine';
+                isAntiClock = 0;
+                break;
+            case angle>240&&angle<=300:
+                // 8点方向
+                turnAxis = 'zLine';
+                isAntiClock = 1;
+                break;
+            case angle>120&&angle<=180:
+                // 11点方向
+                turnAxis = 'xLine';
+                isAntiClock = 0;
+                break;
+            case angle>300&&angle<=360:
+                // 5点方向
+                turnAxis = 'xLine';
+                isAntiClock = 1;
+                break;
+        }
+        if (typeName === 'back' && (turnAxis==='zLine'||turnAxis==='xLine')) {
+            isAntiClock =!isAntiClock;
+            turnAxis = turnAxis==='zLine'?'xLine':'zLine';
+        }
+        let gesture = this.stringifyGesture(turnAxis, layerIndex, isAntiClock);
+        // console.log(gesture);
         return gesture;
     }
     /**
