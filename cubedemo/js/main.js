@@ -2,6 +2,8 @@ import * as THREE from './three/build/three.js';
 // require('./three/build/OrbitControls.js');
 import BasicRubik from './object/Rubik02.js';
 import TouchLine from './object/TouchLine.js';
+import Btn from './object/StaticBtn.js';
+
 import TWEEN from './tween/Tween.js';
 const Context = canvas.getContext('webgl');
 export default class Main {
@@ -73,10 +75,15 @@ export default class Main {
         this.backRubik = new BasicRubik(this);
         this.backTypeName = 'back';
         this.backRubik.model(this.backTypeName);
-        this.touchLine = new TouchLine(this);
+
         this.rubikResize(1-this.minPercent);
         
         this.enterAnimation();
+
+        this.touchLine = new TouchLine(this);
+        this.resetBtn = new Btn(this,'images/reset.png',20,20);
+        this.disorderBtn = new Btn(this,'images/disorder.png',20,100);
+
 
     }
     render() {
@@ -190,7 +197,8 @@ export default class Main {
             z:group.position.z
         };
         // 重新设置位置
-        group.rotation.y+=(Math.PI/2);
+        // group.rotation.y+=(Math.PI/2);
+        group.rotateY(-90 / 180 * Math.PI);
         group.position.y += this.originHeight/3;
         group.position.z -=350;
         let startStatus = {
