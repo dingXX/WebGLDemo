@@ -81,7 +81,6 @@ _Group.prototype = {
 };
 
 var TWEEN = new _Group();
-console.log(TWEEN);
 TWEEN._nextId = 0;
 TWEEN.nextId = function () {
 	return TWEEN._nextId++;

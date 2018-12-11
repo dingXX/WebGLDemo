@@ -63,7 +63,8 @@ function createRubik(x, y, z, layerNum, cubeWidth, colors) {
                 let texture = new THREE.Texture(face);
                 texture.needsUpdate = true;
                 let material = new THREE.MeshLambertMaterial({
-                    map: texture
+                    map: texture,
+                    // side:THREE.DoubleSide
                 });
                 materials.push(material);
             }
@@ -144,18 +145,18 @@ export default class Rubik {
         this.zLine = new THREE.Vector3(0, 0, 1);
         this.params = Object.assign(BasicParams);
         this.ThirdGestureMap = {
-            'F':this.stringifyGesture('zLine',0,0),
-            'FA':this.stringifyGesture('zLine',0,1),
-            'B':this.stringifyGesture('zLine',2,1),
-            'BA':this.stringifyGesture('zLine',2,0),
-            'U':this.stringifyGesture('yLine',0,0),
-            'UA':this.stringifyGesture('yLine',0,1),
-            'D':this.stringifyGesture('yLine',2,1),
-            'DA':this.stringifyGesture('yLine',2,0),
-            'R':this.stringifyGesture('xLine',0,0),
-            'RA':this.stringifyGesture('xLine',0,1),
-            'L':this.stringifyGesture('xLine',2,1),
-            'LA':this.stringifyGesture('xLine',2,0),
+            'F': this.stringifyGesture('zLine', 0, 0),
+            'FA': this.stringifyGesture('zLine', 0, 1),
+            'B': this.stringifyGesture('zLine', 2, 1),
+            'BA': this.stringifyGesture('zLine', 2, 0),
+            'U': this.stringifyGesture('yLine', 0, 0),
+            'UA': this.stringifyGesture('yLine', 0, 1),
+            'D': this.stringifyGesture('yLine', 2, 1),
+            'DA': this.stringifyGesture('yLine', 2, 0),
+            'R': this.stringifyGesture('xLine', 0, 0),
+            'RA': this.stringifyGesture('xLine', 0, 1),
+            'L': this.stringifyGesture('xLine', 2, 1),
+            'LA': this.stringifyGesture('xLine', 2, 0),
         };
     }
     /**
@@ -494,50 +495,50 @@ export default class Rubik {
         let gesture = this.stringifyGesture(turnAxis, layerIndex, isAntiClock);
         return gesture;
     }
-    getWholeGesture(sub,typeName){
+    getWholeGesture(sub, typeName) {
         let angle = sub.angle();
-        angle = angle/Math.PI*180+30;
-        if (angle>=360) {
-            angle = angle-360;
+        angle = angle / Math.PI * 180 + 30;
+        if (angle >= 360) {
+            angle = angle - 360;
         }
         let turnAxis;
         let isAntiClock;
         let layerIndex = '-1';
-        switch(true) {
-            case angle>=0&&angle<=60:
+        switch (true) {
+            case angle >= 0 && angle <= 60:
                 // 3点方向
                 turnAxis = 'yLine';
                 isAntiClock = 1;
                 break;
-            case angle>180&&angle<=240:
+            case angle > 180 && angle <= 240:
                 // 9点方向
                 turnAxis = 'yLine';
                 isAntiClock = 0;
                 break;
-            case angle>60&&angle<=120:
+            case angle > 60 && angle <= 120:
                 // 2点方向
                 turnAxis = 'zLine';
                 isAntiClock = 0;
                 break;
-            case angle>240&&angle<=300:
+            case angle > 240 && angle <= 300:
                 // 8点方向
                 turnAxis = 'zLine';
                 isAntiClock = 1;
                 break;
-            case angle>120&&angle<=180:
+            case angle > 120 && angle <= 180:
                 // 11点方向
                 turnAxis = 'xLine';
                 isAntiClock = 0;
                 break;
-            case angle>300&&angle<=360:
+            case angle > 300 && angle <= 360:
                 // 5点方向
                 turnAxis = 'xLine';
                 isAntiClock = 1;
                 break;
         }
-        if (typeName === 'back' && (turnAxis==='zLine'||turnAxis==='xLine')) {
-            isAntiClock =!isAntiClock;
-            turnAxis = turnAxis==='zLine'?'xLine':'zLine';
+        if (typeName === 'back' && (turnAxis === 'zLine' || turnAxis === 'xLine')) {
+            isAntiClock = !isAntiClock;
+            turnAxis = turnAxis === 'zLine' ? 'xLine' : 'zLine';
         }
         let gesture = this.stringifyGesture(turnAxis, layerIndex, isAntiClock);
         // console.log(gesture);
@@ -555,26 +556,53 @@ export default class Rubik {
         point.applyMatrix4(matrix);
         return point.sub(center);
     }
+    /**
+     * [getRandomGestureList 随机手势数列，由于打乱]
+     * @return {[type]} [description]
+     */
     getRandomGestureList() {
-        let {layerNum} = this.params;
-        let turnAxisArr = ['xLine','yLine','zLine'];
+        let {
+            layerNum
+        } = this.params;
+        let turnAxisArr = ['xLine', 'yLine', 'zLine'];
         let randomGestureList = [];
-        for (let i = 0; i < layerNum*7 ; i++) {
-            let turnIndex = Math.floor(Math.random()*3);
+        for (let i = 0; i < layerNum * 7; i++) {
+            let turnIndex = Math.floor(Math.random() * 3);
             let turnAxis = turnAxisArr[turnIndex];
             let isAntiClock = Math.round(Math.random());
-            let turnLayerNum = Math.floor(Math.random()*layerNum);
-            if (turnLayerNum === Math.floor(layerNum/2)) {
+            let turnLayerNum = Math.floor(Math.random() * layerNum);
+            if (turnLayerNum === Math.floor(layerNum / 2)) {
                 // 通常单数魔方是不转中心那一层的
                 turnLayerNum = 0;
             }
-            let gesture = this.stringifyGesture(turnAxis,turnLayerNum,isAntiClock);
+            let gesture = this.stringifyGesture(turnAxis, turnLayerNum, isAntiClock);
             randomGestureList.push(gesture);
         }
-        console.log(randomGestureList);
         return randomGestureList;
     }
-
+    reset() {
+        for (let i = 0; i < this.cubes.length; i++) {
+            // 父类的矩阵
+            let matrix = this.cubes[i].matrix.clone();
+            // 逆反矩阵
+            matrix.getInverse(matrix);
+            let cube = this.cubes[i];
+            cube.applyMatrix(matrix);
+            for (let j = 0; j < this.initStatus.length; j++) {
+                let status = this.initStatus[j];
+                if ((cube.id-this.minCubeIndex) == status.cubeIndex) {
+                    cube.position.x = status.x;
+                    cube.position.y = status.y;
+                    cube.position.z = status.z;
+                    cube.cubeIndex = status.cubeIndex;
+                    break;
+                }
+            }
+        }
+    }
+    isRestore(){
+        
+    }
     /**
      * [parseGesture 解压手势]
      * @param  {[type]} gesture [description]

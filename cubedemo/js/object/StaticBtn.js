@@ -18,11 +18,11 @@ export default class TouchLine {
             //在程序中的实体尺寸
             this.width = this.realWidth * this.radio;
             this.height = this.width;
-            let uiRadio = this.main.originWidth / window.innerWidth;
+            this.uiRadio = this.main.originWidth / window.innerWidth;
             //屏幕尺寸
             this.screenRect = {
-                width: this.width / uiRadio,
-                height: this.height / uiRadio
+                width: this.width / this.uiRadio,
+                height: this.height / this.uiRadio
             }
 
             var geometry = new THREE.PlaneGeometry(this.width, this.height);
@@ -49,8 +49,8 @@ export default class TouchLine {
         this.plane.position.x = -this.main.originWidth / 2 + this.width / 2 + x * this.radio;
         this.plane.position.y = this.main.originHeight / 2 - this.height / 2 - y * this.radio;
         console.log(this.plane.position.x,this.plane.position.y);
-        this.screenRect.left = (this.main.originWidth / 2 + this.plane.position.x - this.width / 2) / this.main.uiRadio;
-        this.screenRect.top = (this.main.originHeight / 2 - this.plane.position.y - this.height / 2) / this.main.uiRadio;
+        this.screenRect.left = (this.main.originWidth / 2 + this.plane.position.x - this.width / 2) / this.uiRadio;
+        this.screenRect.top = (this.main.originHeight / 2 - this.plane.position.y - this.height / 2) / this.uiRadio;
     }
 
     /**

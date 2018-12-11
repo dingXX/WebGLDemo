@@ -78,7 +78,8 @@ export default class Main {
 
         this.rubikResize(1-this.minPercent);
         
-        this.enterAnimation();
+        // this.enterAnimation();
+        this.initEvent();
 
         this.touchLine = new TouchLine(this);
         this.resetBtn = new Btn(this,'images/reset.png',20,20);
@@ -108,6 +109,12 @@ export default class Main {
         // 触摸的是控制条时，才可以移动
         if (touch.clientY >= this.touchLine.screenRect.top && touch.clientY <= this.touchLine.screenRect.top + this.touchLine.screenRect.height) {
             this.touchLine.enable();
+        }else if(this.resetBtn.isHover(touch) && !this.isRotating){
+            this.frontRubik.reset();
+            this.backRubik.reset();
+        }else if(this.disorderBtn.isHover(touch) && !this.isRotating){
+            this.randomRubik();
+            // this.frontRubik.isRestore();
         } else {
             this.getIntersects(touch);
             //触摸点在魔方上且魔方没有转动
@@ -128,16 +135,6 @@ export default class Main {
             var frontPercent = touch.clientY / window.innerHeight;
             this.rubikResize(frontPercent);
         })
-        
-    }
-
-    /**
-     * 触摸结束
-     */
-    touchEnd(event) {
-        this.touchLine.disable();
-        var touch = event.changedTouches[0];
-
         // console.log(touch);
         // 滑动点在魔方上且魔方没有转动
         if (!this.isRotating && this.startPoint && this.targetRubik) {
@@ -153,6 +150,17 @@ export default class Main {
                 this.rotateRubik(rubikTypeName);
             }
         }
+        
+    }
+
+    /**
+     * 触摸结束
+     */
+    touchEnd(event) {
+        this.touchLine.disable();
+        var touch = event.changedTouches[0];
+
+        
     }
     /**
      * 正反魔方区域占比变化
@@ -230,14 +238,19 @@ export default class Main {
             tween.start();
             requestAnimationFrame(animate);
         },500);
-        this.randomRubik(()=>{
-            this.initEvent();
-        });
+        this.initEvent();
+        // this.randomRubik(()=>{
+        //     this.initEvent();
+        // });
 
         
 
     }
     randomRubik(cb){
+        if (this.randoming) {
+            return;
+        }
+        this.randoming = true;
         let gestureList = this.frontRubik.getRandomGestureList();
         let gesture = gestureList.shift();
         let that = this;
@@ -249,6 +262,8 @@ export default class Main {
                 if (gesture) {
                     rotateFn(gesture);
                 }else{
+                    that.randoming = false;
+
                     if (typeof cb === 'function') {
                         cb();
                     }
@@ -294,13 +309,7 @@ export default class Main {
             this.anotherRubik = this.frontRubik;
             rubikTypeName = this.backTypeName;
         }
-        var targetIntersect;
-        for (var i = 0; i < this.scene.children.length; i++) {
-            if (this.scene.children[i].typeName == rubikTypeName) {
-                targetIntersect = this.scene.children[i];
-                break;
-            }
-        }
+        var targetIntersect = this.scene.getObjectByProperty('typeName',rubikTypeName);
 
         if (targetIntersect) {
             // 检查射线和物体之间的所有交叉点（包含或不包含后代）。交叉点返回按距离排序，最接近的为第一个。 返回一个交叉点对象数组。
@@ -311,6 +320,7 @@ export default class Main {
             if (intersects.length >= 2) {
                 // 获取点击的小方块和点击的是魔方的哪个面
                 this.intersect = intersects[1];
+                console.log(this.intersect);
                 this.normalize = intersects[0].face.normal;
             }
         }
