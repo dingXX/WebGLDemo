@@ -600,8 +600,40 @@ export default class Rubik {
             }
         }
     }
-    isRestore(){
+    getCubeColorByNormal(cube,vector){
+        // 计算对应轴在世界坐标上的方向
+        // 原点在世界坐标的位置
+        var point = new THREE.Vector3();
+        this.group.getWorldPosition(point);
+        // 对应轴点在世界坐标的位置
+        var direction = vector.clone();
+        this.group.localToWorld(direction);
+        // 世界坐标上的射线方向的标准化
+        direction.sub(point);
+        direction.normalize();
+
         
+        var oPoint = cube.position.clone();
+
+        oPoint.add(vector.clone().multiplyScalar(-this.params.cubeWidth));
+        this.group.localToWorld(oPoint);
+        var raycaster = new THREE.Raycaster(oPoint,direction);
+        var intersect = raycaster.intersectObject(cube);
+        if (intersect.length>0) {
+            var materialIndex = intersect[0].face.materialIndex;
+            console.log(cube.cubeIndex,materialIndex);
+        }
+    }
+    isRestore(){
+        var elements = this.getTurnBoxs('zLine_0_0');
+        var vector = new THREE.Vector3(0,0,1);
+        // this.getCubeColorByNormal(elements[0],vector);
+        for (var i = 0; i < elements.length; i++) {
+            // if (elements[i].cubeIndex === 1){
+                this.getCubeColorByNormal(elements[i],vector);
+            //     break;
+            // }
+        }
     }
     /**
      * [parseGesture 解压手势]
