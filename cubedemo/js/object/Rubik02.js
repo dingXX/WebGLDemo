@@ -620,15 +620,32 @@ export default class Rubik {
         if (intersect.length>0) {
             let materialIndex = intersect[0].face.materialIndex;
             console.log(cube.cubeIndex,materialIndex);
+            return materialIndex;
         }
     }
     isRestore(){
-        let elements = this.getTurnBoxs('zLine_0_0');
-        let vector = new THREE.Vector3(0,0,1);
-        for (let i = 0; i < elements.length; i++) {
+        // let elements = this.getTurnBoxs('zLine_0_0');
+        // let vector = new THREE.Vector3(0,0,1);
+        let surfaces = ['F','B','L','R','U','D'];
+        for (let i = 0; i < surfaces.length; i++) {
+            let surface = surfaces[i];
+            let gesture = this.ThirdGestureMap[surface];
+            let {turnAxis,isAntiClock} = this.parseGesture(gesture);
+            let vector = this[turnAxis].clone();
+            if (isAntiClock) {
+                vector.negate();
+            }
+            let elements = this.getTurnBoxs(gesture);
             let vec = this.getLocal2WorldVector(vector.clone());
-            this.getCubeColorByNormal(elements[i],vec);
+            let faceMaterialIndex = this.getCubeColorByNormal(elements[0],vec);
+            for (let j = 1; j < elements.length; j++) {
+                let cubeMaterialIndex = this.getCubeColorByNormal(elements[j],vec);
+                if (cubeMaterialIndex !== faceMaterialIndex) {
+                    return false;
+                }
+            }
         }
+        return true;
     }
     /**
      * [parseGesture 解压手势]

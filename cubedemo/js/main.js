@@ -114,7 +114,8 @@ export default class Main {
             this.backRubik.reset();
         }else if(this.disorderBtn.isHover(touch) && !this.isRotating){
             // this.randomRubik();
-            this.frontRubik.isRestore();
+            var istrue = this.frontRubik.isRestore();
+            console.log(istrue,'isRestore');
         } else {
             this.getIntersects(touch);
             //触摸点在魔方上且魔方没有转动
