@@ -600,39 +600,34 @@ export default class Rubik {
             }
         }
     }
+    /**
+     * [getCubeColorByNormal 获取小方块在世界坐标轴上的颜色]
+     * @param  {[type]} cube   [description]
+     * @param  {[type]} vector [世界坐标轴坐标]
+     * @return {[type]}        [description]
+     */
     getCubeColorByNormal(cube,vector){
-        // 计算对应轴在世界坐标上的方向
-        // 原点在世界坐标的位置
-        var point = new THREE.Vector3();
-        this.group.getWorldPosition(point);
-        // 对应轴点在世界坐标的位置
-        var direction = vector.clone();
-        this.group.localToWorld(direction);
-        // 世界坐标上的射线方向的标准化
-        direction.sub(point);
-        direction.normalize();
-
-        
-        var oPoint = cube.position.clone();
-
-        oPoint.add(vector.clone().multiplyScalar(-this.params.cubeWidth));
-        this.group.localToWorld(oPoint);
-        var raycaster = new THREE.Raycaster(oPoint,direction);
-        var intersect = raycaster.intersectObject(cube);
+        // 计算射线在世界坐标原点，在小方块中的中心点的某一侧的width距离的位置
+        let origin = new THREE.Vector3();
+        cube.getWorldPosition(origin);
+        let vec = vector.clone().multiplyScalar(-this.params.cubeWidth);
+        origin.add(vec);
+        // 方向标准化
+        let direction = vector.clone().normalize();
+        this.raycaster =  this.raycaster || new THREE.Raycaster();
+        this.raycaster.set(origin,direction);
+        let intersect = this.raycaster.intersectObject(cube);
         if (intersect.length>0) {
-            var materialIndex = intersect[0].face.materialIndex;
+            let materialIndex = intersect[0].face.materialIndex;
             console.log(cube.cubeIndex,materialIndex);
         }
     }
     isRestore(){
-        var elements = this.getTurnBoxs('zLine_0_0');
-        var vector = new THREE.Vector3(0,0,1);
-        // this.getCubeColorByNormal(elements[0],vector);
-        for (var i = 0; i < elements.length; i++) {
-            // if (elements[i].cubeIndex === 1){
-                this.getCubeColorByNormal(elements[i],vector);
-            //     break;
-            // }
+        let elements = this.getTurnBoxs('zLine_0_0');
+        let vector = new THREE.Vector3(0,0,1);
+        for (let i = 0; i < elements.length; i++) {
+            let vec = this.getLocal2WorldVector(vector.clone());
+            this.getCubeColorByNormal(elements[i],vec);
         }
     }
     /**
