@@ -3,7 +3,7 @@ const BasicParams = {
     x: 0,
     y: 0,
     z: 0,
-    layerNum: 3,
+    layerNum: 4,
     cubeWidth: 50,
     //右、左、上、下、前、后
     //橙 红 白 黄 蓝 绿
@@ -104,36 +104,37 @@ function createTransparencyMesh(x, y, z, cubeWidth) {
 export default class Rubik {
     // 判断小方块是否在对应层 函数map
     judgeTurnFnMap = {
-        'zLine': function(layerIndex, cubeIndex) {
-            let num = BasicParams.layerNum * BasicParams.layerNum;
+        'zLine': (layerIndex, cubeIndex)=> {
+            let num = this.params.layerNum * this.params.layerNum;
             return parseInt(cubeIndex / num) === layerIndex;
         },
-        'xLine': function(layerIndex, cubeIndex) {
-            return cubeIndex % BasicParams.layerNum === layerIndex;
+        'xLine': (layerIndex, cubeIndex)=> {
+            return cubeIndex % this.params.layerNum === layerIndex;
         },
-        'yLine': function(layerIndex, cubeIndex) {
-            let num1 = BasicParams.layerNum;
+        'yLine': (layerIndex, cubeIndex)=> {
+            let num1 = this.params.layerNum;
             let num2 = num1 * num1;
             return parseInt(cubeIndex % num2 / num1) === layerIndex;
         }
     };
     // 根据小方块的cubeIndex，确定它在对应轴层中的哪一层
     getLayerIndexFnMap = {
-        'zLine': function(cubeIndex) {
-            let num = BasicParams.layerNum * BasicParams.layerNum;
+        'zLine': (cubeIndex)=>{
+            let num = this.params.layerNum * this.params.layerNum;
             return parseInt(cubeIndex / num);
         },
-        'xLine': function(cubeIndex) {
-            return cubeIndex % BasicParams.layerNum;
+        'xLine': (cubeIndex)=>{
+            return cubeIndex % this.params.layerNum;
         },
-        'yLine': function(cubeIndex) {
-            let num1 = BasicParams.layerNum;
+        'yLine': (cubeIndex)=> {
+            let num1 = this.params.layerNum;
             let num2 = num1 * num1;
             return parseInt(cubeIndex % num2 / num1);
         }
     };
+    
 
-    constructor(main) {
+    constructor(main,layerNum) {
         this.main = main;
         //默认转动动画时长
         this.defaultTotalTime = 250;
@@ -143,7 +144,11 @@ export default class Rubik {
         this.xLine = new THREE.Vector3(1, 0, 0);
         this.yLine = new THREE.Vector3(0, 1, 0);
         this.zLine = new THREE.Vector3(0, 0, 1);
-        this.params = Object.assign(BasicParams);
+        this.params = Object.assign({},BasicParams,{layerNum});
+        // if (this.params.layerNum * this.params.cubeWidth>150) {
+        //     this.params.cubeWidth = parseInt(150/this.params.layerNum);
+        // }
+        this.params.cubeWidth = parseInt(150/this.params.layerNum);
         this.ThirdGestureMap = {
             'F': this.stringifyGesture('zLine', 0, 0),
             'FA': this.stringifyGesture('zLine', 0, 1),
@@ -171,7 +176,7 @@ export default class Rubik {
         // 初始状态下，对应的位置和cubeIndex
         this.initStatus = [];
         // 生成魔方小方块
-        this.cubes = createRubik(BasicParams.x, BasicParams.y, BasicParams.z, BasicParams.layerNum, BasicParams.cubeWidth, BasicParams.colors);
+        this.cubes = createRubik(this.params.x, this.params.y, this.params.z, this.params.layerNum, this.params.cubeWidth, this.params.colors);
         // 获取小方块的最小索引值
         this.getMinCubeIndex();
         // 逐个小方块加入group
@@ -197,7 +202,7 @@ export default class Rubik {
             this.group.add(item);
         }
         // 外层透明大方块
-        this.container = createTransparencyMesh(BasicParams.x, BasicParams.y, BasicParams.z, (BasicParams.cubeWidth + 1) * BasicParams.layerNum);
+        this.container = createTransparencyMesh(this.params.x, this.params.y, this.params.z, (this.params.cubeWidth + 1) * this.params.layerNum);
         this.container.name = 'coverCube';
         this.group.add(this.container);
         this.main.scene.add(this.group);
@@ -239,9 +244,9 @@ export default class Rubik {
             for (let j = 0; j < this.initStatus.length; j++) {
                 let temp2 = this.initStatus[j];
                 // 位置相等的时候，就认为这是小方块新位置索引cubeIndex
-                if (Math.abs(temp1.position.x - temp2.x) <= BasicParams.cubeWidth / 2 &&
-                    Math.abs(temp1.position.y - temp2.y) <= BasicParams.cubeWidth / 2 &&
-                    Math.abs(temp1.position.z - temp2.z) <= BasicParams.cubeWidth / 2) {
+                if (Math.abs(temp1.position.x - temp2.x) <= this.params.cubeWidth / 2 &&
+                    Math.abs(temp1.position.y - temp2.y) <= this.params.cubeWidth / 2 &&
+                    Math.abs(temp1.position.z - temp2.z) <= this.params.cubeWidth / 2) {
                     temp1.cubeIndex = temp2.cubeIndex;
                     break;
                 }
@@ -647,6 +652,9 @@ export default class Rubik {
             }
         }
         return true;
+    }
+    destroy(){
+        this.main.scene.remove(this.group);
     }
     /**
      * [parseGesture 解压手势]

@@ -69,8 +69,9 @@ export default class TouchLine {
             var percent = len / window.innerHeight;
             var len2 = this.main.originHeight * percent;
             this.plane.position.y += len2;
+            this.hPercent = y / window.innerHeight;
             if (typeof cb === 'function') {
-                cb();
+                cb(this.hPercent);
             }
         }
     }

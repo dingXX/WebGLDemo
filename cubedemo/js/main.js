@@ -68,21 +68,16 @@ export default class Main {
     initObject() {
         this.originHeight = Math.tan(22.5 / 180 * Math.PI) * this.camera.position.z * 2;
         this.originWidth = this.originHeight * this.camera.aspect;
-        this.frontRubik = new BasicRubik(this);
-        this.frontTypeName = 'front';
-        this.frontRubik.model(this.frontTypeName);
-        this.backRubik = new BasicRubik(this);
-        this.backTypeName = 'back';
-        this.backRubik.model(this.backTypeName);
-
-        this.rubikResize(1-this.minPercent);
         
+        this.changeLayNumRubik();
         // this.enterAnimation();
         this.initEvent();
 
         this.touchLine = new TouchLine(this);
         this.resetBtn = new Btn(this,'重置',20,20);
         this.disorderBtn = new Btn(this,'打乱',20,100);
+        this.changeBtn = new Btn(this,'换阶',20,180);
+
 
 
     }
@@ -115,6 +110,16 @@ export default class Main {
             // this.randomRubik();
             var istrue = this.frontRubik.isRestore();
             console.log(istrue,'isRestore');
+            
+        }else if(this.changeBtn.isHover(touch) && !this.isRotating){
+            let that = this;
+            var itemList = ['2', '3', '4']
+            wx.showActionSheet({
+                itemList,
+                success(res) {
+                    that.changeLayNumRubik(+itemList[res.tapIndex]);
+                }
+            })
         } else {
             this.getIntersects(touch);
             //触摸点在魔方上且魔方没有转动
@@ -131,9 +136,11 @@ export default class Main {
     touchMove(event) {
         var touch = event.touches[0];
         //滑动touchline
-        this.touchLine.move(touch.clientY, () => {
-            var frontPercent = touch.clientY / window.innerHeight;
-            this.rubikResize(frontPercent);
+        this.touchLine.move(touch.clientY, (percent) => {
+            // var frontPercent = touch.clientY / window.innerHeight;
+            // console.log(percent,frontPercent);
+
+            this.rubikResize(percent);
         })
         // console.log(touch);
         // 滑动点在魔方上且魔方没有转动
@@ -324,5 +331,22 @@ export default class Main {
             }
         }
         return rubikTypeName;
+    }
+    changeLayNumRubik(layerNum=3){
+        if (this.frontRubik && this.frontRubik.params.layerNum ===layerNum) {
+            return;
+        }
+        this.frontRubik && this.frontRubik.destroy();
+        this.backRubik && this.backRubik.destroy();
+        this.frontRubik = new BasicRubik(this,layerNum);
+        this.frontTypeName = 'front';
+        this.frontRubik.model(this.frontTypeName);
+        this.backRubik = new BasicRubik(this,layerNum);
+        this.backTypeName = 'back';
+        this.backRubik.model(this.backTypeName);
+
+        this.rubikResize(1-this.minPercent);
+        let percent = (this.touchLine&&this.touchLine.hPercent) || (1-this.minPercent);
+        this.rubikResize(percent);
     }
 }
