@@ -6,6 +6,7 @@ const BasicParams = {
     layerNum: 3,
     cubeWidth: 50,
     //右、左、上、下、前、后
+    //橙 红 白 黄 蓝 绿
     colors: ['#ff6b02', '#dd422f',
         '#ffffff', '#fdcd02',
         '#3d81f7', '#019d53'
@@ -64,7 +65,6 @@ function createRubik(x, y, z, layerNum, cubeWidth, colors) {
                 texture.needsUpdate = true;
                 let material = new THREE.MeshLambertMaterial({
                     map: texture,
-                    // side:THREE.DoubleSide
                 });
                 materials.push(material);
             }
@@ -619,7 +619,7 @@ export default class Rubik {
         let intersect = this.raycaster.intersectObject(cube);
         if (intersect.length>0) {
             let materialIndex = intersect[0].face.materialIndex;
-            console.log(cube.cubeIndex,materialIndex);
+            materialIndex += (materialIndex%2)?-1:1;
             return materialIndex;
         }
     }
@@ -630,6 +630,7 @@ export default class Rubik {
         for (let i = 0; i < surfaces.length; i++) {
             let surface = surfaces[i];
             let gesture = this.ThirdGestureMap[surface];
+            console.log(gesture);
             let {turnAxis,isAntiClock} = this.parseGesture(gesture);
             let vector = this[turnAxis].clone();
             if (isAntiClock) {

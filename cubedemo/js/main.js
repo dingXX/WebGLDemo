@@ -48,7 +48,6 @@ export default class Main {
     }
     initCamera() {
         this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 1, 1000);
-        console.log(1000, 0, 0);
         this.camera.position.set(0, 0, 300 / this.camera.aspect);
         // this.camera.up.set(1, 1, 1); //正方向
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
@@ -82,8 +81,8 @@ export default class Main {
         this.initEvent();
 
         this.touchLine = new TouchLine(this);
-        this.resetBtn = new Btn(this,'images/reset.png',20,20);
-        this.disorderBtn = new Btn(this,'images/disorder.png',20,100);
+        this.resetBtn = new Btn(this,'重置',20,20);
+        this.disorderBtn = new Btn(this,'打乱',20,100);
 
 
     }
@@ -321,7 +320,6 @@ export default class Main {
             if (intersects.length >= 2) {
                 // 获取点击的小方块和点击的是魔方的哪个面
                 this.intersect = intersects[1];
-                console.log(this.intersect);
                 this.normalize = intersects[0].face.normal;
             }
         }
