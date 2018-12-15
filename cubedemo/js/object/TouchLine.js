@@ -15,11 +15,11 @@ export default class TouchLine {
         this.screenRect = {
             width: window.innerWidth,
             height: this.realHeight * window.innerWidth / this.realWidth,
-            left:0
-            
-        } 
+            left: 0
+
+        }
         this.screenRect.top = window.innerHeight / 2 - this.screenRect.height / 2;
-        loader.load('images/touchLine.png', function(texture) {
+        loader.load('images/touchLine.png', function (texture) {
             // 生成平面几何类
             var geometry = new THREE.PlaneGeometry(that.width, that.height);
             var material = new THREE.MeshBasicMaterial({
@@ -30,9 +30,9 @@ export default class TouchLine {
             that.plane.position.set(0, 0, 0);
             that.main.scene.add(that.plane);
             that.defaultPosition();
-        }, function(xhr) {
+        }, function (xhr) {
             console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-        }, function(xhr) {
+        }, function (xhr) {
             console.log('An error happened');
         });
     }
@@ -53,7 +53,7 @@ export default class TouchLine {
         this.isActive = false;
     }
 
-    move(y,cb) {
+    move(y, cb) {
         if (this.isActive) {
             if (y < window.innerHeight * this.main.minPercent || y > window.innerHeight * (1 - this.main.minPercent)) {
                 if (y < window.innerHeight * this.main.minPercent) {

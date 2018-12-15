@@ -104,14 +104,14 @@ function createTransparencyMesh(x, y, z, cubeWidth) {
 export default class Rubik {
     // 判断小方块是否在对应层 函数map
     judgeTurnFnMap = {
-        'zLine': (layerIndex, cubeIndex)=> {
+        'zLine': (layerIndex, cubeIndex) => {
             let num = this.params.layerNum * this.params.layerNum;
             return parseInt(cubeIndex / num) === layerIndex;
         },
-        'xLine': (layerIndex, cubeIndex)=> {
+        'xLine': (layerIndex, cubeIndex) => {
             return cubeIndex % this.params.layerNum === layerIndex;
         },
-        'yLine': (layerIndex, cubeIndex)=> {
+        'yLine': (layerIndex, cubeIndex) => {
             let num1 = this.params.layerNum;
             let num2 = num1 * num1;
             return parseInt(cubeIndex % num2 / num1) === layerIndex;
@@ -119,22 +119,22 @@ export default class Rubik {
     };
     // 根据小方块的cubeIndex，确定它在对应轴层中的哪一层
     getLayerIndexFnMap = {
-        'zLine': (cubeIndex)=>{
+        'zLine': (cubeIndex) => {
             let num = this.params.layerNum * this.params.layerNum;
             return parseInt(cubeIndex / num);
         },
-        'xLine': (cubeIndex)=>{
+        'xLine': (cubeIndex) => {
             return cubeIndex % this.params.layerNum;
         },
-        'yLine': (cubeIndex)=> {
+        'yLine': (cubeIndex) => {
             let num1 = this.params.layerNum;
             let num2 = num1 * num1;
             return parseInt(cubeIndex % num2 / num1);
         }
     };
-    
 
-    constructor(main,layerNum) {
+
+    constructor(main, layerNum) {
         this.main = main;
         //默认转动动画时长
         this.defaultTotalTime = 250;
@@ -144,11 +144,13 @@ export default class Rubik {
         this.xLine = new THREE.Vector3(1, 0, 0);
         this.yLine = new THREE.Vector3(0, 1, 0);
         this.zLine = new THREE.Vector3(0, 0, 1);
-        this.params = Object.assign({},BasicParams,{layerNum});
+        this.params = Object.assign({}, BasicParams, {
+            layerNum
+        });
         // if (this.params.layerNum * this.params.cubeWidth>150) {
         //     this.params.cubeWidth = parseInt(150/this.params.layerNum);
         // }
-        this.params.cubeWidth = parseInt(150/this.params.layerNum);
+        this.params.cubeWidth = parseInt(150 / this.params.layerNum);
         this.ThirdGestureMap = {
             'F': this.stringifyGesture('zLine', 0, 0),
             'FA': this.stringifyGesture('zLine', 0, 1),
@@ -595,7 +597,7 @@ export default class Rubik {
             cube.applyMatrix(matrix);
             for (let j = 0; j < this.initStatus.length; j++) {
                 let status = this.initStatus[j];
-                if ((cube.id-this.minCubeIndex) == status.cubeIndex) {
+                if ((cube.id - this.minCubeIndex) == status.cubeIndex) {
                     cube.position.x = status.x;
                     cube.position.y = status.y;
                     cube.position.z = status.z;
@@ -611,7 +613,7 @@ export default class Rubik {
      * @param  {[type]} vector [世界坐标轴坐标]
      * @return {[type]}        [description]
      */
-    getCubeColorByNormal(cube,vector){
+    getCubeColorByNormal(cube, vector) {
         // 计算射线在世界坐标原点，在小方块中的中心点的某一侧的width距离的位置
         let origin = new THREE.Vector3();
         cube.getWorldPosition(origin);
@@ -619,33 +621,36 @@ export default class Rubik {
         origin.add(vec);
         // 方向标准化
         let direction = vector.clone().normalize();
-        this.raycaster =  this.raycaster || new THREE.Raycaster();
-        this.raycaster.set(origin,direction);
+        this.raycaster = this.raycaster || new THREE.Raycaster();
+        this.raycaster.set(origin, direction);
         let intersect = this.raycaster.intersectObject(cube);
-        if (intersect.length>0) {
+        if (intersect.length > 0) {
             let materialIndex = intersect[0].face.materialIndex;
-            materialIndex += (materialIndex%2)?-1:1;
+            materialIndex += (materialIndex % 2) ? -1 : 1;
             return materialIndex;
         }
     }
-    isRestore(){
+    isRestore() {
         // let elements = this.getTurnBoxs('zLine_0_0');
         // let vector = new THREE.Vector3(0,0,1);
-        let surfaces = ['F','B','L','R','U','D'];
+        let surfaces = ['F', 'B', 'L', 'R', 'U', 'D'];
         for (let i = 0; i < surfaces.length; i++) {
             let surface = surfaces[i];
             let gesture = this.ThirdGestureMap[surface];
             console.log(gesture);
-            let {turnAxis,isAntiClock} = this.parseGesture(gesture);
+            let {
+                turnAxis,
+                isAntiClock
+            } = this.parseGesture(gesture);
             let vector = this[turnAxis].clone();
             if (isAntiClock) {
                 vector.negate();
             }
             let elements = this.getTurnBoxs(gesture);
             let vec = this.getLocal2WorldVector(vector.clone());
-            let faceMaterialIndex = this.getCubeColorByNormal(elements[0],vec);
+            let faceMaterialIndex = this.getCubeColorByNormal(elements[0], vec);
             for (let j = 1; j < elements.length; j++) {
-                let cubeMaterialIndex = this.getCubeColorByNormal(elements[j],vec);
+                let cubeMaterialIndex = this.getCubeColorByNormal(elements[j], vec);
                 if (cubeMaterialIndex !== faceMaterialIndex) {
                     return false;
                 }
@@ -653,7 +658,7 @@ export default class Rubik {
         }
         return true;
     }
-    destroy(){
+    destroy() {
         this.main.scene.remove(this.group);
     }
     /**

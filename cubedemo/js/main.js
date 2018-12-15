@@ -68,15 +68,15 @@ export default class Main {
     initObject() {
         this.originHeight = Math.tan(22.5 / 180 * Math.PI) * this.camera.position.z * 2;
         this.originWidth = this.originHeight * this.camera.aspect;
-        
+
         this.changeLayNumRubik();
         // this.enterAnimation();
         this.initEvent();
 
         this.touchLine = new TouchLine(this);
-        this.resetBtn = new Btn(this,'重置',20,20);
-        this.disorderBtn = new Btn(this,'打乱',20,100);
-        this.changeBtn = new Btn(this,'换阶',20,180);
+        this.resetBtn = new Btn(this, '重置', 20, 20);
+        this.disorderBtn = new Btn(this, '打乱', 20, 100);
+        this.changeBtn = new Btn(this, '换阶', 20, 180);
 
 
 
@@ -103,15 +103,15 @@ export default class Main {
         // 触摸的是控制条时，才可以移动
         if (touch.clientY >= this.touchLine.screenRect.top && touch.clientY <= this.touchLine.screenRect.top + this.touchLine.screenRect.height) {
             this.touchLine.enable();
-        }else if(this.resetBtn.isHover(touch) && !this.isRotating){
+        } else if (this.resetBtn.isHover(touch) && !this.isRotating) {
             this.frontRubik.reset();
             this.backRubik.reset();
-        }else if(this.disorderBtn.isHover(touch) && !this.isRotating){
+        } else if (this.disorderBtn.isHover(touch) && !this.isRotating) {
             // this.randomRubik();
             var istrue = this.frontRubik.isRestore();
-            console.log(istrue,'isRestore');
-            
-        }else if(this.changeBtn.isHover(touch) && !this.isRotating){
+            console.log(istrue, 'isRestore');
+
+        } else if (this.changeBtn.isHover(touch) && !this.isRotating) {
             let that = this;
             var itemList = ['2', '3', '4']
             wx.showActionSheet({
@@ -125,7 +125,7 @@ export default class Main {
             //触摸点在魔方上且魔方没有转动
             if (!this.isRotating) {
                 //开始转动，设置起始点
-                this.startPoint = this.intersect?this.intersect.point:(new THREE.Vector2(touch.clientX,touch.clientY));
+                this.startPoint = this.intersect ? this.intersect.point : (new THREE.Vector2(touch.clientX, touch.clientY));
             }
         }
 
@@ -147,8 +147,8 @@ export default class Main {
         if (!this.isRotating && this.startPoint && this.targetRubik) {
             let rubikTypeName = this.getIntersects(touch);
             if (!this.intersect) {
-                this.movePoint = new THREE.Vector2(touch.clientX,touch.clientY);
-            }else{
+                this.movePoint = new THREE.Vector2(touch.clientX, touch.clientY);
+            } else {
                 this.movePoint = this.intersect.point;
 
             }
@@ -157,7 +157,7 @@ export default class Main {
                 this.rotateRubik(rubikTypeName);
             }
         }
-        
+
     }
 
     /**
@@ -167,7 +167,7 @@ export default class Main {
         this.touchLine.disable();
         var touch = event.changedTouches[0];
 
-        
+
     }
     /**
      * 正反魔方区域占比变化
@@ -180,17 +180,17 @@ export default class Main {
         this.isRotating = true; //转动标识置为true
         var sub = this.movePoint.sub(this.startPoint); //计算转动向量
         // var direction = this.targetRubik.getDirection(sub, this.normalize); //计算转动方向
-        let gesture ;
+        let gesture;
         if (this.intersect) {
             var cubeIndex = this.intersect.object.cubeIndex;
-            gesture = this.targetRubik.getGesture(sub,this.normalize,cubeIndex);
-        }else{
+            gesture = this.targetRubik.getGesture(sub, this.normalize, cubeIndex);
+        } else {
             // 因为屏幕的坐标是左上角是原点，向上滑的时候，y会是负值
-            sub.setY(-1*sub.y);
-            gesture = this.targetRubik.getWholeGesture(sub,rubikTypeName);
+            sub.setY(-1 * sub.y);
+            gesture = this.targetRubik.getWholeGesture(sub, rubikTypeName);
 
         }
-        this.targetRubik.rotateMove(gesture,()=>{
+        this.targetRubik.rotateMove(gesture, () => {
             this.resetRotateParams();
         });
         this.anotherRubik.rotateMove(gesture);
@@ -203,36 +203,36 @@ export default class Main {
         //     self.resetRotateParams();
         // });
     };
-    enterAnimation(){
+    enterAnimation() {
         let isAnimationEnd = false;
         let group = this.frontRubik.group;
         let endStatus = {
-            rotateY :group.rotation.y,
-            y:group.position.y,
-            z:group.position.z
+            rotateY: group.rotation.y,
+            y: group.position.y,
+            z: group.position.z
         };
         // 重新设置位置
         // group.rotation.y+=(Math.PI/2);
         group.rotateY(-90 / 180 * Math.PI);
-        group.position.y += this.originHeight/3;
-        group.position.z -=350;
+        group.position.y += this.originHeight / 3;
+        group.position.z -= 350;
         let startStatus = {
-            rotateY :group.rotation.y,
-            y:group.position.y,
-            z:group.position.z
+            rotateY: group.rotation.y,
+            y: group.position.y,
+            z: group.position.z
         };
         var tween = new TWEEN.Tween(startStatus)
-                    .to(endStatus,1500)
-                    .easing(TWEEN.Easing.Quadratic.Out)
-                    .onUpdate(function(){
-                        group.rotation.y = startStatus.rotateY;
-                        group.position.y = startStatus.y;
-                        group.position.z = startStatus.z;
-                    }).onComplete(()=>{
-                        isAnimationEnd = true;
-                    });
-        
-        function animate(time){
+            .to(endStatus, 1500)
+            .easing(TWEEN.Easing.Quadratic.Out)
+            .onUpdate(function () {
+                group.rotation.y = startStatus.rotateY;
+                group.position.y = startStatus.y;
+                group.position.z = startStatus.z;
+            }).onComplete(() => {
+                isAnimationEnd = true;
+            });
+
+        function animate(time) {
             if (!isAnimationEnd) {
                 TWEEN.update(time);
 
@@ -241,19 +241,19 @@ export default class Main {
         }
         // tween.start();
 
-        setTimeout(()=>{
+        setTimeout(() => {
             tween.start();
             requestAnimationFrame(animate);
-        },500);
+        }, 500);
         this.initEvent();
         // this.randomRubik(()=>{
         //     this.initEvent();
         // });
 
-        
+
 
     }
-    randomRubik(cb){
+    randomRubik(cb) {
         if (this.randoming) {
             return;
         }
@@ -261,21 +261,21 @@ export default class Main {
         let gestureList = this.frontRubik.getRandomGestureList();
         let gesture = gestureList.shift();
         let that = this;
-        let rotateFn = function(gesture){
-            that.frontRubik.rotateMove(gesture,0,100);
-            that.backRubik.rotateMove(gesture,()=>{
+        let rotateFn = function (gesture) {
+            that.frontRubik.rotateMove(gesture, 0, 100);
+            that.backRubik.rotateMove(gesture, () => {
                 gesture = gestureList.shift();
-               
+
                 if (gesture) {
                     rotateFn(gesture);
-                }else{
+                } else {
                     that.randoming = false;
 
                     if (typeof cb === 'function') {
                         cb();
                     }
                 }
-            },100);
+            }, 100);
         }
         rotateFn(gesture);
     };
@@ -316,7 +316,7 @@ export default class Main {
             this.anotherRubik = this.frontRubik;
             rubikTypeName = this.backTypeName;
         }
-        var targetIntersect = this.scene.getObjectByProperty('typeName',rubikTypeName);
+        var targetIntersect = this.scene.getObjectByProperty('typeName', rubikTypeName);
 
         if (targetIntersect) {
             // 检查射线和物体之间的所有交叉点（包含或不包含后代）。交叉点返回按距离排序，最接近的为第一个。 返回一个交叉点对象数组。
@@ -332,21 +332,21 @@ export default class Main {
         }
         return rubikTypeName;
     }
-    changeLayNumRubik(layerNum=3){
-        if (this.frontRubik && this.frontRubik.params.layerNum ===layerNum) {
+    changeLayNumRubik(layerNum = 3) {
+        if (this.frontRubik && this.frontRubik.params.layerNum === layerNum) {
             return;
         }
         this.frontRubik && this.frontRubik.destroy();
         this.backRubik && this.backRubik.destroy();
-        this.frontRubik = new BasicRubik(this,layerNum);
+        this.frontRubik = new BasicRubik(this, layerNum);
         this.frontTypeName = 'front';
         this.frontRubik.model(this.frontTypeName);
-        this.backRubik = new BasicRubik(this,layerNum);
+        this.backRubik = new BasicRubik(this, layerNum);
         this.backTypeName = 'back';
         this.backRubik.model(this.backTypeName);
 
-        this.rubikResize(1-this.minPercent);
-        let percent = (this.touchLine&&this.touchLine.hPercent) || (1-this.minPercent);
+        this.rubikResize(1 - this.minPercent);
+        let percent = (this.touchLine && this.touchLine.hPercent) || (1 - this.minPercent);
         this.rubikResize(percent);
     }
 }
