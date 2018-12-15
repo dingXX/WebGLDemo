@@ -1,3 +1,4 @@
+/*global canvas wx*/
 import * as THREE from './three/build/three.js';
 // require('./three/build/OrbitControls.js');
 import BasicRubik from './object/Rubik02.js';
@@ -6,7 +7,15 @@ import Btn from './object/StaticBtn.js';
 
 import TWEEN from './tween/Tween.js';
 const Context = canvas.getContext('webgl');
+/**
+ * [Main 主要类]
+ */
 export default class Main {
+    /**
+     * 构造函数
+     *
+     * @return  {void}
+     */
     constructor() {
         this.context = Context; //绘图上下文
         this.width = window.innerWidth;
@@ -25,6 +34,10 @@ export default class Main {
         this.render();
 
     }
+    /**
+     * [setRotateparams 设置魔方参数]
+     * @return  {void}
+     */
     setRotateparams() {
         this.raycaster = new THREE.Raycaster(); //碰撞射线
         this.intersect; //射线碰撞的元素
@@ -35,6 +48,10 @@ export default class Main {
         this.movePoint; //滑动点
         this.isRotating = false; //魔方是否正在转动
     }
+    /**
+     * [initRender 初始化]
+     * @return  {void}
+     */
     initRender() {
         this.renderer = new THREE.WebGLRenderer({
             antialias: true, //抗锯齿开启
@@ -46,6 +63,10 @@ export default class Main {
         canvas.height = this.height * this.devicePixelRatio;
         this.renderer.setPixelRatio(this.devicePixelRatio);
     }
+    /**
+     * [initCamera 初始化相机]
+     * @return  {void}
+     */
     initCamera() {
         this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 1, 1000);
         this.camera.position.set(0, 0, 300 / this.camera.aspect);
@@ -58,13 +79,25 @@ export default class Main {
         // this.orbitController.rotateSpeed = 2;
         // this.orbitController.target = this.viewCenter; //设置控制点
     }
+    /**
+     * [initScene 初始化场景]
+     * @return  {void}
+     */
     initScene() {
         this.scene = new THREE.Scene();
     }
+    /**
+     * 初始化灯光
+     * @return  {void}
+     */
     initLight() {
         this.light = new THREE.AmbientLight(0xfefefe);
         this.scene.add(this.light);
     }
+    /**
+     * 初始化物体
+     * @return  {void}
+     */
     initObject() {
         this.originHeight = Math.tan(22.5 / 180 * Math.PI) * this.camera.position.z * 2;
         this.originWidth = this.originHeight * this.camera.aspect;
@@ -81,13 +114,18 @@ export default class Main {
 
 
     }
+    /**
+     * 渲染
+     * @return  {void}
+     */
     render() {
         this.renderer.clear();
         this.renderer.render(this.scene, this.camera);
         requestAnimationFrame(this.render.bind(this), canvas);
     }
     /**
-     * 初始化事件
+     *事件初始化
+     * @return  {void}
      */
     initEvent() {
         wx.onTouchStart(this.touchStart.bind(this));
@@ -95,10 +133,12 @@ export default class Main {
         wx.onTouchEnd(this.touchEnd.bind(this));
     }
     /**
-     * 触摸开始
+     * 触摸事件
+     * @param   {object}  eve  事件
+     * @return  {void}
      */
-    touchStart(event) {
-        var touch = event.touches[0];
+    touchStart(eve) {
+        var touch = eve.touches[0];
         this.startPoint = touch;
         // 触摸的是控制条时，才可以移动
         if (touch.clientY >= this.touchLine.screenRect.top && touch.clientY <= this.touchLine.screenRect.top + this.touchLine.screenRect.height) {
@@ -113,13 +153,13 @@ export default class Main {
 
         } else if (this.changeBtn.isHover(touch) && !this.isRotating) {
             let that = this;
-            var itemList = ['2', '3', '4']
+            var itemList = ['2', '3', '4'];
             wx.showActionSheet({
                 itemList,
                 success(res) {
                     that.changeLayNumRubik(+itemList[res.tapIndex]);
                 }
-            })
+            });
         } else {
             this.getIntersects(touch);
             //触摸点在魔方上且魔方没有转动
@@ -131,17 +171,19 @@ export default class Main {
 
     }
     /**
-     * 触摸移动
+     * 触摸移动事件
+     * @param   {object}  eve  事件
+     * @return  {void}
      */
-    touchMove(event) {
-        var touch = event.touches[0];
+    touchMove(eve) {
+        var touch = eve.touches[0];
         //滑动touchline
         this.touchLine.move(touch.clientY, (percent) => {
             // var frontPercent = touch.clientY / window.innerHeight;
             // console.log(percent,frontPercent);
 
             this.rubikResize(percent);
-        })
+        });
         // console.log(touch);
         // 滑动点在魔方上且魔方没有转动
         if (!this.isRotating && this.startPoint && this.targetRubik) {
@@ -161,21 +203,30 @@ export default class Main {
     }
 
     /**
-     * 触摸结束
+     * 触摸结束事件
+     * @param   {object}  eve  事件obj
+     * @return  {void}
      */
-    touchEnd(event) {
+    touchEnd(eve) {
         this.touchLine.disable();
-        var touch = event.changedTouches[0];
+        // var touch = event.changedTouches[0];
 
 
     }
     /**
      * 正反魔方区域占比变化
+     * @param {number}    frontPercent 正魔方占比
+     * @return  {void}
      */
     rubikResize(frontPercent) {
         this.frontRubik.resizeHeight(frontPercent, 1);
         this.backRubik.resizeHeight(1 - frontPercent, -1);
     }
+    /**
+     * 转动魔方
+     * @param   {string}  rubikTypeName  魔方类型
+     * @return  {void}
+     */
     rotateRubik(rubikTypeName) {
         this.isRotating = true; //转动标识置为true
         var sub = this.movePoint.sub(this.startPoint); //计算转动向量
@@ -202,7 +253,11 @@ export default class Main {
         // this.anotherRubik.rotateMove(anotherIndex, direction, function() {
         //     self.resetRotateParams();
         // });
-    };
+    }
+    /**
+     * 入场动画
+     * @return  {void}
+     */
     enterAnimation() {
         let isAnimationEnd = false;
         let group = this.frontRubik.group;
@@ -231,7 +286,11 @@ export default class Main {
             }).onComplete(() => {
                 isAnimationEnd = true;
             });
-
+        /**
+         * 动画
+         * @param   {number}  time  更新时间
+         * @return  {void}
+         */
         function animate(time) {
             if (!isAnimationEnd) {
                 TWEEN.update(time);
@@ -253,6 +312,11 @@ export default class Main {
 
 
     }
+    /**
+     * 打乱魔方
+     * @param   {function}  cb  回调函数
+     * @return  {void}
+     */
     randomRubik(cb) {
         if (this.randoming) {
             return;
@@ -261,13 +325,13 @@ export default class Main {
         let gestureList = this.frontRubik.getRandomGestureList();
         let gesture = gestureList.shift();
         let that = this;
-        let rotateFn = function (gesture) {
-            that.frontRubik.rotateMove(gesture, 0, 100);
-            that.backRubik.rotateMove(gesture, () => {
-                gesture = gestureList.shift();
+        let rotateFn = function (rGesture) {
+            that.frontRubik.rotateMove(rGesture, 0, 100);
+            that.backRubik.rotateMove(rGesture, () => {
+                rGesture = gestureList.shift();
 
-                if (gesture) {
-                    rotateFn(gesture);
+                if (rGesture) {
+                    rotateFn(rGesture);
                 } else {
                     that.randoming = false;
 
@@ -276,11 +340,12 @@ export default class Main {
                     }
                 }
             }, 100);
-        }
+        };
         rotateFn(gesture);
-    };
+    }
     /**
      * 重置魔方转动参数
+     * @return  {void}
      */
     resetRotateParams() {
         this.isRotating = false;
@@ -291,6 +356,11 @@ export default class Main {
         this.startPoint = null;
         this.movePoint = null;
     }
+    /**
+     * 获取点击的物体
+     * @param   {object}  touch  触摸点
+     * @return  {void}
+     */
     getIntersects(touch) {
         var mouse = new THREE.Vector2();
         // 标准化，取值[-1,1]
@@ -332,6 +402,11 @@ export default class Main {
         }
         return rubikTypeName;
     }
+    /**
+     * 魔方换阶
+     * @param   {number}  layerNum  层级
+     * @return  {void}
+     */
     changeLayNumRubik(layerNum = 3) {
         if (this.frontRubik && this.frontRubik.params.layerNum === layerNum) {
             return;

@@ -1,5 +1,9 @@
 import * as THREE from '../three/build/three.js';
-
+/**
+ * 生成按钮texture
+ * @param   {string}  txt  按钮文字
+ * @return  {texture}       贴片
+ */
 function createBtn(txt) {
     let canvas = document.createElement('canvas');
     canvas.width = 64;
@@ -15,7 +19,7 @@ function createBtn(txt) {
     ctx.lineWidth = 4;
     ctx.strokeStyle = '#44b549';
     ctx.stroke();
-    ctx.font = "24px serif";
+    ctx.font = '24px serif';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
     ctx.fillText(txt, 32, 32);
@@ -23,7 +27,20 @@ function createBtn(txt) {
     texture.needsUpdate = true;
     return texture;
 }
+/**
+ * 触摸条
+ */
 export default class TouchLine {
+    /**
+     * 构造函数
+     *
+     * @param   {object}  main  ctx
+     * @param   {string}  txt   文案
+     * @param   {number}  x     初始位置
+     * @param   {number}  y     初始位置
+     *
+     * @return  {void}
+     */
     constructor(main, txt, x, y) {
         this.main = main;
 
@@ -48,7 +65,7 @@ export default class TouchLine {
         this.screenRect = {
             width: this.width / this.uiRadio,
             height: this.height / this.uiRadio
-        }
+        };
 
         var geometry = new THREE.PlaneGeometry(this.width, this.height);
         var material = new THREE.MeshBasicMaterial({
@@ -67,9 +84,14 @@ export default class TouchLine {
         //     console.log('An error happened');
         // });
     }
+
     /**
-     * 默认位置
-     * x,y : 屏幕左上角位置
+     * 默认位置 （屏幕左上角位置）
+     *
+     * @param   {number}  x  x轴位置
+     * @param   {number}  y  y轴位置
+     *
+     * @return  {void}
      */
     defaultPosition(x = 0, y = 0) {
         this.plane.position.x = -this.main.originWidth / 2 + this.width / 2 + x * this.radio;
@@ -79,7 +101,11 @@ export default class TouchLine {
     }
 
     /**
-     * 判断是否在范围内
+     * 判断是否在触摸范围内
+     *
+     * @param   {object}  touch  点击事件
+     *
+     * @return  {void}
      */
     isHover(touch) {
         var isHover = false;
@@ -88,10 +114,19 @@ export default class TouchLine {
         }
         return isHover;
     }
-
+    /**
+     * 处理中
+     *
+     * @return  {void}
+     */
     enable() {
         this.isActive = true;
     }
+    /**
+     * 非处理中
+     *
+     * @return  {void}
+     */
     disable() {
         this.isActive = false;
     }
