@@ -324,25 +324,30 @@ export default class Main {
         }
         this.randoming = true;
         let gestureList = this.frontRubik.getRandomGestureList();
-        let gesture = gestureList.shift();
-        let that = this;
-        let rotateFn = function (rGesture) {
-            that.frontRubik.rotateMove(rGesture, 0, 100);
-            that.backRubik.rotateMove(rGesture, () => {
-                rGesture = gestureList.shift();
+        this.frontRubik.rotateMoveFromList(gestureList, () => {
+            console.log('frontRubik_random_over');
+            this.randoming = false;
+        });
+        this.backRubik.rotateMoveFromList(gestureList);
+        // let gesture = gestureList.shift();
+        // let that = this;
+        // let rotateFn = function (rGesture) {
+        //     that.frontRubik.rotateMove(rGesture, 0, 100);
+        //     that.backRubik.rotateMove(rGesture, () => {
+        //         rGesture = gestureList.shift();
 
-                if (rGesture) {
-                    rotateFn(rGesture);
-                } else {
-                    that.randoming = false;
+        //         if (rGesture) {
+        //             rotateFn(rGesture);
+        //         } else {
+        //             that.randoming = false;
 
-                    if (typeof cb === 'function') {
-                        cb();
-                    }
-                }
-            }, 100);
-        };
-        rotateFn(gesture);
+        //             if (typeof cb === 'function') {
+        //                 cb();
+        //             }
+        //         }
+        //     }, 100);
+        // };
+        // rotateFn(gesture);
     }
     /**
      * 重置魔方转动参数

@@ -395,6 +395,10 @@ export default class Rubik {
      * @return {[type]}               [description]
      */
     rotateMove(gesture, callback, totalTime) {
+        if (this.rotating) {
+            return;
+        }
+        this.rotating = true;
         let {
             isAntiClock
         } = this.parseGesture(gesture);
@@ -410,11 +414,29 @@ export default class Rubik {
             this.rotateAnimation(elements, lineVector, isAntiClock, timestamp, 0, 0, () => {
                 // 完成后更新小方块索引值
                 this.updateCubeIndex(elements);
+                this.rotating = false;
                 if (callback) {
                     callback();
                 }
             }, totalTime);
         });
+    }
+    rotateMoveFromList(gestureList,cb){
+        let i = 0;
+        let rotateFn = (faceGesture) => {
+            let gesture = this.ThirdGestureMap[faceGesture];
+            this.rotateMove(gesture, () => {
+                i++;
+                if (i < gestureList.length) {
+                    rotateFn(gestureList[i]);
+                } else {
+                    if (typeof cb === 'function') {
+                        cb();
+                    }
+                }
+            });
+        }
+        rotateFn(gestureList[i]);
     }
     /**
      * [rotateAnimation 旋转动画]
@@ -607,27 +629,39 @@ export default class Rubik {
         return point.sub(center);
     }
     /**
-     * [getRandomGestureList 随机手势数列，由于打乱]
+     * [getRandomGestureList 随机手势数列，用于打乱]
      * @return {[type]} [description]
      */
     getRandomGestureList() {
+        // let {
+        //     layerNum
+        // } = this.params;
+        // let turnAxisArr = ['xLine', 'yLine', 'zLine'];
+        // let randomGestureList = [];
+        // for (let i = 0; i < layerNum * 7; i++) {
+        //     let turnIndex = Math.floor(Math.random() * 3);
+        //     let turnAxis = turnAxisArr[turnIndex];
+        //     let isAntiClock = Math.round(Math.random());
+        //     let turnLayerNum = Math.floor(Math.random() * layerNum);
+        //     if (turnLayerNum === Math.floor(layerNum / 2)) {
+        //         // 通常单数魔方是不转中心那一层的
+        //         turnLayerNum = 0;
+        //     }
+        //     let gesture = this.stringifyGesture(turnAxis, turnLayerNum, isAntiClock);
+        //     randomGestureList.push(gesture);
+        // }
+        // return randomGestureList;
         let {
             layerNum
         } = this.params;
-        let turnAxisArr = ['xLine', 'yLine', 'zLine'];
+        let arr = ['F','FA','B','BA','U','UA','D','DA','L','LA','R','RA'];
+        let len = arr.length;
         let randomGestureList = [];
         for (let i = 0; i < layerNum * 7; i++) {
-            let turnIndex = Math.floor(Math.random() * 3);
-            let turnAxis = turnAxisArr[turnIndex];
-            let isAntiClock = Math.round(Math.random());
-            let turnLayerNum = Math.floor(Math.random() * layerNum);
-            if (turnLayerNum === Math.floor(layerNum / 2)) {
-                // 通常单数魔方是不转中心那一层的
-                turnLayerNum = 0;
-            }
-            let gesture = this.stringifyGesture(turnAxis, turnLayerNum, isAntiClock);
-            randomGestureList.push(gesture);
+            let turnIndex = Math.floor(Math.random() * len);
+            randomGestureList.push(arr[turnIndex]);
         }
+        console.log(randomGestureList);
         return randomGestureList;
     }
     reset() {
@@ -703,8 +737,15 @@ export default class Rubik {
     }
     solve(){
         let surfaces = ['U', 'R', 'F', 'D', 'L', 'B'];
-        let colorMap = ['R','L', 'U', 'D', 'F', 'B'];
+        let colorMap = {};
         let colors = [];
+        let centerCube = '';
+        for (let i = 0; i < this.cubes.length; i++) {
+            if (this.cubes[i].cubeIndex === 13) {
+                centerCube = this.cubes[i];
+                break;
+            }
+        }
         // 拼凑出还原需要的字符串
         for (let i = 0; i < surfaces.length; i++) {
             let surface = surfaces[i];
@@ -719,36 +760,35 @@ export default class Rubik {
             }
             let elements = this.getTurnBoxs(gesture);
             let vec = this.getLocal2WorldVector(vector.clone());
-            let faceMaterialIndex = this.getCubeColorByNormal(elements[0], vec);
+            let centerFaceMaterialIndex = this.getCubeColorByNormal(centerCube, vec);
+            colorMap[surface] = centerFaceMaterialIndex;
             let faceIndexFn = this.getFaceIndexFnMap[surface];
             let faceColors = new Array(6);
             for (let j = 0; j < elements.length; j++) {
                 let cubeMaterialIndex = this.getCubeColorByNormal(elements[j], vec);
                 let faceIndex = faceIndexFn(elements[j].cubeIndex);
-                faceColors[faceIndex] = colorMap[cubeMaterialIndex];
+                faceColors[faceIndex] = cubeMaterialIndex;
             }
             colors.push(faceColors.join(''));
         }
+        // 解决还原方法中对字符串的顺序要求URFDLB
         let cubeStr = colors.join('');
+        for (const key in colorMap) {
+            if (colorMap.hasOwnProperty(key)) {
+                let regExp = new RegExp(colorMap[key], 'g');
+                cubeStr = cubeStr.replace(regExp, key);
+            }
+        }
+        console.log(cubeStr);
         // 获取还原结果
         let result = Kociemba.solution(cubeStr);
         console.log(result);
         result = result.trim().replace(/\'/g, 'A').replace(/([FBUDLR])2/g, '$1 $1');
         console.log(result);
         let gestureList = result.split(' ');
-        let i = 0;
-        let rotateFn = (faceGesture) => {
-            let gesture = this.ThirdGestureMap[faceGesture];
-            this.rotateMove(gesture, () => {
-                i++;
-                if (i < gestureList.length) {
-                    rotateFn(gestureList[i]);
-                }else{
-                    console.log('rotate over');
-                }
-            });
-        }
-        rotateFn(gestureList[i]);
+        this.rotateMoveFromList(gestureList,()=>{
+            console.log('over');
+        });
     }
     destroy() {
         this.main.scene.remove(this.group);
