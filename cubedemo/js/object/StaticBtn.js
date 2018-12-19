@@ -30,7 +30,7 @@ function createBtn(txt) {
 /**
  * 触摸条
  */
-export default class TouchLine {
+export default class StaticBtn {
     /**
      * 构造函数
      *

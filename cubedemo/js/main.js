@@ -4,7 +4,6 @@ import * as THREE from './three/build/three.js';
 import BasicRubik from './object/Rubik02.js';
 import TouchLine from './object/TouchLine.js';
 import Btn from './object/StaticBtn.js';
-
 import TWEEN from './tween/Tween.js';
 const Context = canvas.getContext('webgl');
 /**
@@ -110,7 +109,7 @@ export default class Main {
         this.resetBtn = new Btn(this, '重置', 20, 20);
         this.disorderBtn = new Btn(this, '打乱', 20, 100);
         this.changeBtn = new Btn(this, '换阶', 20, 180);
-
+        this.tmBtn = new Btn(this, '还原', 20, 260);
 
 
     }
@@ -147,9 +146,9 @@ export default class Main {
             this.frontRubik.reset();
             this.backRubik.reset();
         } else if (this.disorderBtn.isHover(touch) && !this.isRotating) {
-            // this.randomRubik();
-            var istrue = this.frontRubik.isRestore();
-            console.log(istrue, 'isRestore');
+            this.randomRubik();
+            // var istrue = this.frontRubik.isRestore();
+            // console.log(istrue, 'isRestore');
 
         } else if (this.changeBtn.isHover(touch) && !this.isRotating) {
             let that = this;
@@ -160,6 +159,8 @@ export default class Main {
                     that.changeLayNumRubik(+itemList[res.tapIndex]);
                 }
             });
+        } else if (this.tmBtn.isHover(touch) && !this.isRotating) {
+            this.frontRubik.solve();
         } else {
             this.getIntersects(touch);
             //触摸点在魔方上且魔方没有转动

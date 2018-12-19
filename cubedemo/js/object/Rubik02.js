@@ -1,4 +1,5 @@
 import * as THREE from '../three/build/three.js';
+import Kociemba from '../algorithm/Kociemba.js';
 const BasicParams = {
     x: 0,
     y: 0,
@@ -132,6 +133,48 @@ export default class Rubik {
             return parseInt(cubeIndex % num2 / num1);
         }
     };
+    getFaceIndexFnMap = {
+        'F': (cubeIndex) => {
+            return cubeIndex;
+        },
+        'B': (cubeIndex) => {
+            let num = this.params.layerNum * this.params.layerNum;
+            let result =  cubeIndex - num*2;
+            // todo 有什么逻辑可以适应还原的字符串的内容
+            // arr 是还原字符串对应cubeIndex归9化后的对应值
+            let arr = [2,1,0,5,4,3,8,7,6];
+            return arr[result];
+
+        },
+        'U':(cubeIndex)=>{
+            let num1 = this.params.layerNum;
+            let num2 = num1 * num1;
+            let layerIndex = parseInt(cubeIndex / num2);
+            let num3 = num2-num1;
+            let result = cubeIndex - num3 * layerIndex;
+            let arr = [6,7,8,3,4,5,0,1,2];
+            return arr[result];
+        },
+        'D':(cubeIndex)=>{
+            let num1 = this.params.layerNum;
+            let num2 = num1 * num1;
+            let layerIndex = parseInt(cubeIndex / num2);
+            let num3 = num2 - num1;
+            return cubeIndex - num3 * (layerIndex + 1);
+        },
+        'L':(cubeIndex)=>{
+            let num1 = parseInt(cubeIndex / this.params.layerNum);
+            let result = cubeIndex - num1 * (this.params.layerNum - 1);
+            let arr = [2,5,8,1,4,7,0,3,6];
+            return arr[result];
+        },
+        'R':(cubeIndex)=>{
+            let num1 = parseInt(cubeIndex / this.params.layerNum) + 1;
+            let result = cubeIndex - num1 * (this.params.layerNum - 1);
+            let arr = [0, 3, 6, 1, 4, 7, 2, 5, 8];
+            return arr[result];
+        }
+    };
 
 
     constructor(main, layerNum) {
@@ -160,10 +203,10 @@ export default class Rubik {
             'UA': this.stringifyGesture('yLine', 0, 1),
             'D': this.stringifyGesture('yLine', 2, 1),
             'DA': this.stringifyGesture('yLine', 2, 0),
-            'R': this.stringifyGesture('xLine', 0, 0),
-            'RA': this.stringifyGesture('xLine', 0, 1),
-            'L': this.stringifyGesture('xLine', 2, 1),
-            'LA': this.stringifyGesture('xLine', 2, 0),
+            'R': this.stringifyGesture('xLine', 2, 0),
+            'RA': this.stringifyGesture('xLine', 2, 1),
+            'L': this.stringifyGesture('xLine', 0, 1),
+            'LA': this.stringifyGesture('xLine', 0, 0),
         };
     }
     /**
@@ -649,7 +692,7 @@ export default class Rubik {
             let elements = this.getTurnBoxs(gesture);
             let vec = this.getLocal2WorldVector(vector.clone());
             let faceMaterialIndex = this.getCubeColorByNormal(elements[0], vec);
-            for (let j = 1; j < elements.length; j++) {
+            for (let j = 0; j < elements.length; j++) {
                 let cubeMaterialIndex = this.getCubeColorByNormal(elements[j], vec);
                 if (cubeMaterialIndex !== faceMaterialIndex) {
                     return false;
@@ -657,6 +700,55 @@ export default class Rubik {
             }
         }
         return true;
+    }
+    solve(){
+        let surfaces = ['U', 'R', 'F', 'D', 'L', 'B'];
+        let colorMap = ['R','L', 'U', 'D', 'F', 'B'];
+        let colors = [];
+        // 拼凑出还原需要的字符串
+        for (let i = 0; i < surfaces.length; i++) {
+            let surface = surfaces[i];
+            let gesture = this.ThirdGestureMap[surface];
+            let {
+                turnAxis,
+                isAntiClock
+            } = this.parseGesture(gesture);
+            let vector = this[turnAxis].clone();
+            if (isAntiClock) {
+                vector.negate();
+            }
+            let elements = this.getTurnBoxs(gesture);
+            let vec = this.getLocal2WorldVector(vector.clone());
+            let faceMaterialIndex = this.getCubeColorByNormal(elements[0], vec);
+            let faceIndexFn = this.getFaceIndexFnMap[surface];
+            let faceColors = new Array(6);
+            for (let j = 0; j < elements.length; j++) {
+                let cubeMaterialIndex = this.getCubeColorByNormal(elements[j], vec);
+                let faceIndex = faceIndexFn(elements[j].cubeIndex);
+                faceColors[faceIndex] = colorMap[cubeMaterialIndex];
+            }
+            colors.push(faceColors.join(''));
+        }
+        let cubeStr = colors.join('');
+        // 获取还原结果
+        let result = Kociemba.solution(cubeStr);
+        console.log(result);
+        result = result.trim().replace(/\'/g, 'A').replace(/([FBUDLR])2/g, '$1 $1');
+        console.log(result);
+        let gestureList = result.split(' ');
+        let i = 0;
+        let rotateFn = (faceGesture) => {
+            let gesture = this.ThirdGestureMap[faceGesture];
+            this.rotateMove(gesture, () => {
+                i++;
+                if (i < gestureList.length) {
+                    rotateFn(gestureList[i]);
+                }else{
+                    console.log('rotate over');
+                }
+            });
+        }
+        rotateFn(gestureList[i]);
     }
     destroy() {
         this.main.scene.remove(this.group);
