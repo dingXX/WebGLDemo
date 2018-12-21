@@ -138,41 +138,41 @@ export default class Rubik {
             return cubeIndex;
         },
         'B': (cubeIndex) => {
-            let num = this.params.layerNum * this.params.layerNum;
-            let result =  cubeIndex - num*2;
+            let num = this.params.layerNum * this.params.layerNum * (this.params.layerNum-1);
+            let result = cubeIndex - num;
             // todo 有什么逻辑可以适应还原的字符串的内容
             // arr 是还原字符串对应cubeIndex归9化后的对应值
-            let arr = [2,1,0,5,4,3,8,7,6];
-            return arr[result];
+            // let arr = [2,1,0,5,4,3,8,7,6];
+            return result;
 
         },
-        'U':(cubeIndex)=>{
+        'U': (cubeIndex) => {
             let num1 = this.params.layerNum;
             let num2 = num1 * num1;
             let layerIndex = parseInt(cubeIndex / num2);
-            let num3 = num2-num1;
+            let num3 = num2 - num1;
             let result = cubeIndex - num3 * layerIndex;
-            let arr = [6,7,8,3,4,5,0,1,2];
-            return arr[result];
+            // let arr = [6,7,8,3,4,5,0,1,2];
+            return result;
         },
-        'D':(cubeIndex)=>{
+        'D': (cubeIndex) => {
             let num1 = this.params.layerNum;
             let num2 = num1 * num1;
             let layerIndex = parseInt(cubeIndex / num2);
             let num3 = num2 - num1;
             return cubeIndex - num3 * (layerIndex + 1);
         },
-        'L':(cubeIndex)=>{
+        'L': (cubeIndex) => {
             let num1 = parseInt(cubeIndex / this.params.layerNum);
             let result = cubeIndex - num1 * (this.params.layerNum - 1);
-            let arr = [2,5,8,1,4,7,0,3,6];
-            return arr[result];
+            // let arr = [2,5,8,1,4,7,0,3,6];
+            return result;
         },
-        'R':(cubeIndex)=>{
+        'R': (cubeIndex) => {
             let num1 = parseInt(cubeIndex / this.params.layerNum) + 1;
             let result = cubeIndex - num1 * (this.params.layerNum - 1);
-            let arr = [0, 3, 6, 1, 4, 7, 2, 5, 8];
-            return arr[result];
+            // let arr = [0, 3, 6, 1, 4, 7, 2, 5, 8];
+            return result;
         }
     };
 
@@ -193,18 +193,19 @@ export default class Rubik {
         // if (this.params.layerNum * this.params.cubeWidth>150) {
         //     this.params.cubeWidth = parseInt(150/this.params.layerNum);
         // }
-        this.params.cubeWidth = parseInt(150 / this.params.layerNum);
+        this.params.cubeWidth = parseInt(150 / layerNum);
+        let lastLayerIndex = layerNum-1;
         this.ThirdGestureMap = {
             'F': this.stringifyGesture('zLine', 0, 0),
             'FA': this.stringifyGesture('zLine', 0, 1),
-            'B': this.stringifyGesture('zLine', 2, 1),
-            'BA': this.stringifyGesture('zLine', 2, 0),
+            'B': this.stringifyGesture('zLine', lastLayerIndex, 1),
+            'BA': this.stringifyGesture('zLine', lastLayerIndex, 0),
             'U': this.stringifyGesture('yLine', 0, 0),
             'UA': this.stringifyGesture('yLine', 0, 1),
-            'D': this.stringifyGesture('yLine', 2, 1),
-            'DA': this.stringifyGesture('yLine', 2, 0),
-            'R': this.stringifyGesture('xLine', 2, 0),
-            'RA': this.stringifyGesture('xLine', 2, 1),
+            'D': this.stringifyGesture('yLine', lastLayerIndex, 1),
+            'DA': this.stringifyGesture('yLine', lastLayerIndex, 0),
+            'R': this.stringifyGesture('xLine', lastLayerIndex, 0),
+            'RA': this.stringifyGesture('xLine', lastLayerIndex, 1),
             'L': this.stringifyGesture('xLine', 0, 1),
             'LA': this.stringifyGesture('xLine', 0, 0),
         };
@@ -421,10 +422,11 @@ export default class Rubik {
             }, totalTime);
         });
     }
-    rotateMoveFromList(gestureList,cb){
+    rotateMoveFromList(gestureList, cb, time) {
         let i = 0;
         let rotateFn = (faceGesture) => {
-            let gesture = this.ThirdGestureMap[faceGesture];
+            // 先看看手势字符是否是面转动字符，不是的话，就直接使用
+            let gesture = this.ThirdGestureMap[faceGesture] || faceGesture;
             this.rotateMove(gesture, () => {
                 i++;
                 if (i < gestureList.length) {
@@ -434,7 +436,7 @@ export default class Rubik {
                         cb();
                     }
                 }
-            });
+            }, time);
         }
         rotateFn(gestureList[i]);
     }
@@ -633,36 +635,25 @@ export default class Rubik {
      * @return {[type]} [description]
      */
     getRandomGestureList() {
-        // let {
-        //     layerNum
-        // } = this.params;
-        // let turnAxisArr = ['xLine', 'yLine', 'zLine'];
-        // let randomGestureList = [];
-        // for (let i = 0; i < layerNum * 7; i++) {
-        //     let turnIndex = Math.floor(Math.random() * 3);
-        //     let turnAxis = turnAxisArr[turnIndex];
-        //     let isAntiClock = Math.round(Math.random());
-        //     let turnLayerNum = Math.floor(Math.random() * layerNum);
-        //     if (turnLayerNum === Math.floor(layerNum / 2)) {
-        //         // 通常单数魔方是不转中心那一层的
-        //         turnLayerNum = 0;
-        //     }
-        //     let gesture = this.stringifyGesture(turnAxis, turnLayerNum, isAntiClock);
-        //     randomGestureList.push(gesture);
-        // }
-        // return randomGestureList;
         let {
             layerNum
         } = this.params;
-        let arr = ['F','FA','B','BA','U','UA','D','DA','L','LA','R','RA'];
-        let len = arr.length;
+        let turnAxisArr = ['xLine', 'yLine', 'zLine'];
         let randomGestureList = [];
         for (let i = 0; i < layerNum * 7; i++) {
-            let turnIndex = Math.floor(Math.random() * len);
-            randomGestureList.push(arr[turnIndex]);
+            let turnIndex = Math.floor(Math.random() * 3);
+            let turnAxis = turnAxisArr[turnIndex];
+            let isAntiClock = Math.round(Math.random());
+            let turnLayerNum = Math.floor(Math.random() * layerNum);
+            if (turnLayerNum === Math.floor(layerNum / 2)) {
+                // 通常单数魔方是不转中心那一层的
+                turnLayerNum = 0;
+            }
+            let gesture = this.stringifyGesture(turnAxis, turnLayerNum, isAntiClock);
+            randomGestureList.push(gesture);
         }
-        console.log(randomGestureList);
         return randomGestureList;
+
     }
     reset() {
         for (let i = 0; i < this.cubes.length; i++) {
@@ -735,11 +726,36 @@ export default class Rubik {
         }
         return true;
     }
-    solve(){
+    solve() {
         let surfaces = ['U', 'R', 'F', 'D', 'L', 'B'];
+        let cubeStrFn = 'getCubeString' + this.params.layerNum;
+        if (typeof this[cubeStrFn] !== 'function') {
+            return;
+        }
+        let cubeStr = this[cubeStrFn](surfaces);
+        // 获取还原结果
+        let result = Kociemba.solution(cubeStr);
+        console.log(result);
+        result = result.trim().replace(/\'/g, 'A').replace(/([FBUDLR])2/g, '$1 $1');
+        console.log(result);
+        let gestureList = result.split(' ');
+        return gestureList;
+    }
+    /**
+     * 获取3阶魔方的还原时需要的魔方字符串
+     */
+    getCubeString3(surfaces) {
         let colorMap = {};
         let colors = [];
         let centerCube = '';
+        let FaceCubeIndexMap = {
+            U: [6, 7, 8, 3, 4, 5, 0, 1, 2],
+            R: [0, 3, 6, 1, 4, 7, 2, 5, 8],
+            F: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+            D: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+            L: [2, 5, 8, 1, 4, 7, 0, 3, 6],
+            B: [2, 1, 0, 5, 4, 3, 8, 7, 6]
+        };
         for (let i = 0; i < this.cubes.length; i++) {
             if (this.cubes[i].cubeIndex === 13) {
                 centerCube = this.cubes[i];
@@ -767,6 +783,7 @@ export default class Rubik {
             for (let j = 0; j < elements.length; j++) {
                 let cubeMaterialIndex = this.getCubeColorByNormal(elements[j], vec);
                 let faceIndex = faceIndexFn(elements[j].cubeIndex);
+                faceIndex = FaceCubeIndexMap[surface][faceIndex];
                 faceColors[faceIndex] = cubeMaterialIndex;
             }
             colors.push(faceColors.join(''));
@@ -780,15 +797,56 @@ export default class Rubik {
             }
         }
         console.log(cubeStr);
-        // 获取还原结果
-        let result = Kociemba.solution(cubeStr);
-        console.log(result);
-        result = result.trim().replace(/\'/g, 'A').replace(/([FBUDLR])2/g, '$1 $1');
-        console.log(result);
-        let gestureList = result.split(' ');
-        this.rotateMoveFromList(gestureList,()=>{
-            console.log('over');
-        });
+        return cubeStr;
+    }
+    getCubeString2(surfaces) {
+        surfaces = ['U', 'R', 'F', 'D', 'L', 'B'];
+
+        let colors = [];
+        // 右、 左、 上、 下、 前、 后
+        let materialFaces = ['R', 'L', 'U', 'D', 'F', 'B'];
+        let FaceCubeIndexMap = {
+            U: [2, 3, 0, 1],
+            R: [0, 2, 1, 3],
+            F: [0, 1, 2, 3],
+            D: [0, 1, 2, 3],
+            L: [1, 3, 0, 2],
+            B: [1, 0, 3, 2]
+        };
+        // 拼凑出还原需要的字符串
+        for (let i = 0; i < surfaces.length; i++) {
+            let surface = surfaces[i];
+            let gesture = this.ThirdGestureMap[surface];
+            let {
+                turnAxis,
+                isAntiClock
+            } = this.parseGesture(gesture);
+            let vector = this[turnAxis].clone();
+            if (isAntiClock) {
+                vector.negate();
+            }
+            let elements = this.getTurnBoxs(gesture);
+            let vec = this.getLocal2WorldVector(vector.clone());
+            let faceIndexFn = this.getFaceIndexFnMap[surface];
+            let faceColors = new Array(6);
+            for (let j = 0; j < elements.length; j++) {
+                let cubeMaterialIndex = this.getCubeColorByNormal(elements[j], vec);
+                let faceIndex = faceIndexFn(elements[j].cubeIndex);
+                faceIndex = FaceCubeIndexMap[surface][faceIndex];
+                faceColors[faceIndex] = materialFaces[cubeMaterialIndex];
+            }
+            // axaxxxaxa
+            faceColors.splice(1,0,surface);
+            faceColors.splice(3, 0, surface,surface,surface);
+            faceColors.splice(7, 0, surface);
+            colors.push(faceColors.join(''));
+            
+
+        }
+        // 解决还原方法中对字符串的顺序要求URFDLB
+        let cubeStr = colors.join('');
+        console.log(cubeStr);
+        return cubeStr;
     }
     destroy() {
         this.main.scene.remove(this.group);
