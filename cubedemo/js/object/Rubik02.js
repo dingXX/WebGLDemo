@@ -53,26 +53,27 @@ function createRubik(x, y, z, layerNum, cubeWidth, colors) {
     let leftUpCx = x - (layerNum / 2 - 0.5) * cubeWidth;
     let leftUpCy = y + (layerNum / 2 - 0.5) * cubeWidth;
     let leftUpCz = z + (layerNum / 2 - 0.5) * cubeWidth;
+    // 生成材质贴片，每个面一个颜色
+    let materials = [];
+    for (let k = 0; k < 6; k++) {
+        let face = createFace(colors[k]);
+        let texture = new THREE.Texture(face);
+        texture.needsUpdate = true;
+        let material = new THREE.MeshLambertMaterial({
+            map: texture,
+        });
+        materials.push(material);
+    }
+    // 创建小方块形状
+    let cubegeo = new THREE.BoxGeometry(cubeWidth, cubeWidth, cubeWidth);
+    // 生成小方块
+    let cubeDemo = new THREE.Mesh(cubegeo, materials);
     // 每层
     for (let i = 0; i < layerNum; i++) {
         // 一层9个
         // 材质
         for (let j = 0; j < layerNum * layerNum; j++) {
-            // 生成材质贴片，每个面一个颜色
-            let materials = [];
-            for (let k = 0; k < 6; k++) {
-                let face = createFace(colors[k]);
-                let texture = new THREE.Texture(face);
-                texture.needsUpdate = true;
-                let material = new THREE.MeshLambertMaterial({
-                    map: texture,
-                });
-                materials.push(material);
-            }
-            // 创建小方块形状
-            let cubegeo = new THREE.BoxGeometry(cubeWidth, cubeWidth, cubeWidth);
-            // 生成小方块
-            let cube = new THREE.Mesh(cubegeo, materials);
+            let cube = cubeDemo.clone();
             //x,y,z为魔方中心的位置
             cube.position.x = leftUpCx + (j % layerNum) * cubeWidth;
             cube.position.y = leftUpCy - parseInt(j / layerNum) * cubeWidth;
