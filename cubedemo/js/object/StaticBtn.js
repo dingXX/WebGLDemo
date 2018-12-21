@@ -77,7 +77,7 @@ export default class StaticBtn {
         this.plane.position.set(0, 0, 0);
         this.main.scene.add(this.plane);
         this.defaultPosition(x, y);
-
+        this.enable();
         // }, (xhr) => {
         //     console.log((xhr.loaded / xhr.total * 100) + '% loaded');
         // }, (xhr) => {
@@ -108,6 +108,9 @@ export default class StaticBtn {
      * @return  {void}
      */
     isHover(touch) {
+        if (!this.isActive) {
+            return;
+        }
         var isHover = false;
         if (touch.clientY >= this.screenRect.top && touch.clientY <= this.screenRect.top + this.screenRect.height && touch.clientX >= this.screenRect.left && touch.clientX <= this.screenRect.left + this.screenRect.width) {
             isHover = true;
@@ -129,5 +132,21 @@ export default class StaticBtn {
      */
     disable() {
         this.isActive = false;
+    }
+    /**
+     * 展示按钮
+     * @return {void}
+     */
+    show(){
+        this.plane.visible = true;
+        this.enable();
+    }
+    /**
+     * 隐藏按钮
+     * @return {void}
+     */
+    hide(){
+        this.plane.visible = false;
+        this.disable();
     }
 }

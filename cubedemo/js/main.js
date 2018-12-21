@@ -151,16 +151,9 @@ export default class Main {
             // console.log(istrue, 'isRestore');
 
         } else if (this.changeBtn.isHover(touch) && !this.isRotating) {
-            let that = this;
-            var itemList = ['2', '3', '4'];
-            wx.showActionSheet({
-                itemList,
-                success(res) {
-                    that.changeLayNumRubik(+itemList[res.tapIndex]);
-                }
-            });
+            this.changeRubik();
         } else if (this.tmBtn.isHover(touch) && !this.isRotating) {
-            this.frontRubik.solve();
+            this.solveRubik();
         } else {
             this.getIntersects(touch);
             //触摸点在魔方上且魔方没有转动
@@ -327,27 +320,48 @@ export default class Main {
         this.frontRubik.rotateMoveFromList(gestureList, () => {
             console.log('frontRubik_random_over');
             this.randoming = false;
+        },100);
+        this.backRubik.rotateMoveFromList(gestureList,0,100);
+    }
+    /**
+     * 还原魔方
+     * @return {void}
+     */
+    solveRubik(){
+        if (this.solving) {
+            return;
+        }
+        this.solving = true;
+        wx.showLoading({
+            title: '还原计算中...',
+        });
+        let gestureList = this.frontRubik.solve();
+        wx.hideLoading();
+        this.frontRubik.rotateMoveFromList(gestureList, () => {
+            console.log('frontRubik_solving_over');
+            this.solving = false;
         });
         this.backRubik.rotateMoveFromList(gestureList);
-        // let gesture = gestureList.shift();
-        // let that = this;
-        // let rotateFn = function (rGesture) {
-        //     that.frontRubik.rotateMove(rGesture, 0, 100);
-        //     that.backRubik.rotateMove(rGesture, () => {
-        //         rGesture = gestureList.shift();
-
-        //         if (rGesture) {
-        //             rotateFn(rGesture);
-        //         } else {
-        //             that.randoming = false;
-
-        //             if (typeof cb === 'function') {
-        //                 cb();
-        //             }
-        //         }
-        //     }, 100);
-        // };
-        // rotateFn(gesture);
+    }
+    /**
+     * 换阶
+     * @return {void}
+     */
+    changeRubik(){
+        let that = this;
+        var itemList = ['2', '3', '4'];
+        wx.showActionSheet({
+            itemList,
+            success(res) {
+                let layNum = +itemList[res.tapIndex];
+                that.changeLayNumRubik(layNum);
+                if (layNum === 3 || layNum === 2) {
+                    that.tmBtn.show();
+                }else{
+                    that.tmBtn.hide();
+                }
+            }
+        });
     }
     /**
      * 重置魔方转动参数
