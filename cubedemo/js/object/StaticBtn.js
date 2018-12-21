@@ -6,14 +6,14 @@ import * as THREE from '../three/build/three.js';
  */
 function createBtn(txt) {
     let canvas = document.createElement('canvas');
-    canvas.width = 64;
+    canvas.width = 84;
     canvas.height = 64;
     let ctx = canvas.getContext('2d');
     //在内部用某颜色的16px宽的线再画一个宽高为224的圆角正方形并用改颜色填充
     ctx.beginPath();
     ctx.moveTo(2, 2);
-    ctx.lineTo(60, 2);
-    ctx.lineTo(60, 60);
+    ctx.lineTo(80, 2);
+    ctx.lineTo(80, 60);
     ctx.lineTo(2, 60);
     ctx.closePath();
     ctx.lineWidth = 4;
@@ -23,7 +23,7 @@ function createBtn(txt) {
     ctx.font = '24px serif';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
-    ctx.fillText(txt, 32, 32);
+    ctx.fillText(txt, 42, 32);
     var texture = new THREE.Texture(canvas);
     texture.needsUpdate = true;
     return texture;
@@ -60,7 +60,7 @@ export default class StaticBtn {
         this.realHeight = img.height;
         //在程序中的实体尺寸
         this.width = this.realWidth * this.radio;
-        this.height = this.width;
+        this.height = this.realHeight * this.radio;
         this.uiRadio = this.main.originWidth / window.innerWidth;
         //屏幕尺寸
         this.screenRect = {
