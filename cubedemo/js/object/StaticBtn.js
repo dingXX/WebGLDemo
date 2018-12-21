@@ -19,6 +19,7 @@ function createBtn(txt) {
     ctx.lineWidth = 4;
     ctx.strokeStyle = '#44b549';
     ctx.stroke();
+    ctx.fillStyle = 'black';
     ctx.font = '24px serif';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
