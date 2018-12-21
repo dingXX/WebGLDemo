@@ -27,7 +27,8 @@ function makeEnum(a) {
     for (var i = 0; i < a.length; i++) {
         var x = new enumvar(i, a[i]);
         o[a[i]] = x;
-        self[a[i]] = x;
+        // debugger;
+        window[a[i]] = x;
     }
     Object.defineProperty(o, "valueOf", {
         value: function (a) {
