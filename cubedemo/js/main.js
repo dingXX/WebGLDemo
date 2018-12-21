@@ -440,7 +440,6 @@ export default class Main {
         this.backTypeName = 'back';
         this.backRubik.model(this.backTypeName);
 
-        this.rubikResize(1 - this.minPercent);
         let percent = (this.touchLine && this.touchLine.hPercent) || (1 - this.minPercent);
         this.rubikResize(percent);
     }
