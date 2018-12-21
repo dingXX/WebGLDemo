@@ -1093,7 +1093,7 @@ function generateSlice_Flip_Prun(FRtoBR_Move, flipMove) {
     return Slice_Flip_Prun;
 }
 
-var generatedTables = [];
+var generatedTable = 0;
 
 function generateTables() {
     CoordCube.twistMove = generateTwistMove();
@@ -1108,6 +1108,7 @@ function generateTables() {
     CoordCube.Slice_URtoDF_Parity_Prun = generateSlice_URtoDF_Parity_Prun(CoordCube.FRtoBR_Move, CoordCube.URtoDF_Move);
     CoordCube.Slice_Twist_Prun = generateSlice_Twist_Prun(CoordCube.FRtoBR_Move, CoordCube.twistMove);
     CoordCube.Slice_Flip_Prun = generateSlice_Flip_Prun(CoordCube.FRtoBR_Move, CoordCube.flipMove);
+    generatedTable = 1;
 }
 var Search = {
     ax: new Int32Array(31),
@@ -1171,7 +1172,8 @@ var Search = {
         var s;
 
         // +++++++++++++++++++++check for wrong input +++++++++++++++++++++++++++++
-        if (!generateTables.length) {
+        if (!generatedTable) {
+            console.log('generatedTable');
             generateTables();
         }
         var count = new Int32Array(6);
@@ -1375,6 +1377,7 @@ var Search = {
         return depthPhase1 + depthPhase2;
     }
 };
+console.log('kociemba.js');
 export default Search;
 // var x = Search.solution('FFDLUFUUDRURBRUBDLRRBDFLRFDURLFDRURDLUFLLBBDBFLUBBDFBL');
 // console.log(x);
