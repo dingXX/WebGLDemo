@@ -2,7 +2,7 @@
 import * as THREE from './three/build/three.js';
 // require('./three/build/OrbitControls.js');
 import BasicRubik from './object/Rubik02.js';
-import TouchLine from './object/TouchLine.js';
+// import TouchLine from './object/TouchLine.js';
 import Btn from './object/StaticBtn.js';
 import TWEEN from './tween/Tween.js';
 const Context = canvas.getContext('webgl');
@@ -105,7 +105,7 @@ export default class Main {
         // this.enterAnimation();
         this.initEvent();
 
-        this.touchLine = new TouchLine(this);
+        // this.touchLine = new TouchLine(this);
         this.resetBtn = new Btn(this, '重置', 20, 20);
         this.disorderBtn = new Btn(this, '打乱', 20, 100);
         this.changeBtn = new Btn(this, '换阶', 20, 180);
@@ -140,11 +140,12 @@ export default class Main {
         var touch = eve.touches[0];
         this.startPoint = touch;
         // 触摸的是控制条时，才可以移动
-        if (touch.clientY >= this.touchLine.screenRect.top && touch.clientY <= this.touchLine.screenRect.top + this.touchLine.screenRect.height) {
-            this.touchLine.enable();
-        } else if (this.resetBtn.isHover(touch) && !this.isRotating) {
+        // if (touch.clientY >= this.touchLine.screenRect.top && touch.clientY <= this.touchLine.screenRect.top + this.touchLine.screenRect.height) {
+        //     this.touchLine.enable();
+        // } 
+        if (this.resetBtn.isHover(touch) && !this.isRotating) {
             this.frontRubik.reset();
-            this.backRubik.reset();
+            // this.backRubik.reset();
         } else if (this.disorderBtn.isHover(touch) && !this.isRotating) {
             this.randomRubik();
             // var istrue = this.frontRubik.isRestore();
@@ -172,12 +173,12 @@ export default class Main {
     touchMove(eve) {
         var touch = eve.touches[0];
         //滑动touchline
-        this.touchLine.move(touch.clientY, (percent) => {
-            // var frontPercent = touch.clientY / window.innerHeight;
-            // console.log(percent,frontPercent);
+        // this.touchLine.move(touch.clientY, (percent) => {
+        //     // var frontPercent = touch.clientY / window.innerHeight;
+        //     // console.log(percent,frontPercent);
 
-            this.rubikResize(percent);
-        });
+        //     this.rubikResize(percent);
+        // });
         // console.log(touch);
         // 滑动点在魔方上且魔方没有转动
         if (!this.isRotating && this.startPoint && this.targetRubik) {
@@ -202,7 +203,7 @@ export default class Main {
      * @return  {void}
      */
     touchEnd(eve) {
-        this.touchLine.disable();
+        // this.touchLine.disable();
         // var touch = event.changedTouches[0];
 
 
@@ -212,10 +213,10 @@ export default class Main {
      * @param {number}    frontPercent 正魔方占比
      * @return  {void}
      */
-    rubikResize(frontPercent) {
-        this.frontRubik.resizeHeight(frontPercent, 1);
-        this.backRubik.resizeHeight(1 - frontPercent, -1);
-    }
+    // rubikResize(frontPercent) {
+    //     // this.frontRubik.resizeHeight(frontPercent, 1);
+    //     // this.backRubik.resizeHeight(1 - frontPercent, -1);
+    // }
     /**
      * 转动魔方
      * @param   {string}  rubikTypeName  魔方类型
@@ -238,7 +239,7 @@ export default class Main {
         this.targetRubik.rotateMove(gesture, () => {
             this.resetRotateParams();
         });
-        this.anotherRubik.rotateMove(gesture);
+        // this.anotherRubik.rotateMove(gesture);
         // this.resetRotateParams();
         // this.targetRubik.rotateMove(cubeIndex, direction,()=>{
         //     this.resetRotateParams();
@@ -321,7 +322,7 @@ export default class Main {
             console.log('frontRubik_random_over');
             this.randoming = false;
         },100);
-        this.backRubik.rotateMoveFromList(gestureList,0,100);
+        // this.backRubik.rotateMoveFromList(gestureList,0,100);
     }
     /**
      * 还原魔方
@@ -341,7 +342,7 @@ export default class Main {
             console.log('frontRubik_solving_over');
             this.solving = false;
         });
-        this.backRubik.rotateMoveFromList(gestureList);
+        // this.backRubik.rotateMoveFromList(gestureList);
     }
     /**
      * 换阶
@@ -397,15 +398,17 @@ export default class Main {
 
         // 确定要做碰撞检测的物体
         var rubikTypeName;
-        if (this.touchLine.screenRect.top > touch.clientY) { //正视图
-            this.targetRubik = this.frontRubik;
-            this.anotherRubik = this.backRubik;
-            rubikTypeName = this.frontTypeName;
-        } else if (this.touchLine.screenRect.top + this.touchLine.screenRect.height < touch.clientY) { //反视图
-            this.targetRubik = this.backRubik;
-            this.anotherRubik = this.frontRubik;
-            rubikTypeName = this.backTypeName;
-        }
+        // if (this.touchLine.screenRect.top > touch.clientY) { //正视图
+        //     this.targetRubik = this.frontRubik;
+        //     this.anotherRubik = this.backRubik;
+        //     rubikTypeName = this.frontTypeName;
+        // } else if (this.touchLine.screenRect.top + this.touchLine.screenRect.height < touch.clientY) { //反视图
+        //     this.targetRubik = this.backRubik;
+        //     this.anotherRubik = this.frontRubik;
+        //     rubikTypeName = this.backTypeName;
+        // }
+        this.targetRubik = this.frontRubik;
+        rubikTypeName = this.frontTypeName;
         var targetIntersect = this.scene.getObjectByProperty('typeName', rubikTypeName);
 
         if (targetIntersect) {
@@ -432,15 +435,15 @@ export default class Main {
             return;
         }
         this.frontRubik && this.frontRubik.destroy();
-        this.backRubik && this.backRubik.destroy();
+        // this.backRubik && this.backRubik.destroy();
         this.frontRubik = new BasicRubik(this, layerNum);
         this.frontTypeName = 'front';
         this.frontRubik.model(this.frontTypeName);
-        this.backRubik = new BasicRubik(this, layerNum);
-        this.backTypeName = 'back';
-        this.backRubik.model(this.backTypeName);
+        // this.backRubik = new BasicRubik(this, layerNum);
+        // this.backTypeName = 'back';
+        // this.backRubik.model(this.backTypeName);
 
-        let percent = (this.touchLine && this.touchLine.hPercent) || (1 - this.minPercent);
-        this.rubikResize(percent);
+        // let percent = (this.touchLine && this.touchLine.hPercent) || (1 - this.minPercent);
+        // this.rubikResize(percent);
     }
 }

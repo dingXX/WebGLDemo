@@ -194,7 +194,7 @@ export default class Rubik {
         // if (this.params.layerNum * this.params.cubeWidth>150) {
         //     this.params.cubeWidth = parseInt(150/this.params.layerNum);
         // }
-        this.params.cubeWidth = parseInt(150 / layerNum);
+        this.params.cubeWidth = parseInt(120 / layerNum);
         let lastLayerIndex = layerNum-1;
         this.ThirdGestureMap = {
             'F': this.stringifyGesture('zLine', 0, 0),
