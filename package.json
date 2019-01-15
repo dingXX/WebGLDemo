@@ -15,9 +15,10 @@
     "jimp": "^0.6.0",
     "kmeans-js": "^0.1.2",
     "ml-kmeans": "^4.2.1",
-    "three": "^0.84.0"
+    "three": "^0.100.0"
   },
   "devDependencies": {
+    "alloyfinger": "^0.1.16",
     "css-loader": "^0.23.1",
     "csswring": "^5.1.1",
     "eslint": "^5.10.0",

@@ -2,18 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>cubeRecognize</title>
     <style>
         .cubeImg{
             width: 200px;
         }
+        #imgCanvas{
+            width: 300px;
+            height: 300px;
+        }
     </style>
 </head>
 <body>
-    <div> <img src="/img/cube2.jpg" class="cubeImg"></div>
-    <canvas id="imgCanvas" width="500" height="500"></canvas>
+    <div> <img src="/img/cube.jpg" class="cubeImg"></div>
+    <a href="javascript:void(0);" class="j_ok_btn">ok</a>
+    <canvas id="imgCanvas" width="600" height="600"></canvas>
     <script src="/scripts/dist/recognizeMain.js"></script>
 </body>
 </html>
