@@ -93,7 +93,9 @@ function getFaceImage() {
     // 0	0	1]
     // setTransform(a, b, c, d, e, f);
     var m = new THREE.Matrix3();
-    m.set(1, -xK, 0, -yK, 1, 0, canvas.width / 2, canvas.height / 2, 1);
+    let translateX = (maxX - minX) / 2 + minX;
+    let translateY = (maxY - minY) / 2 + minY;
+    m.set(1, -xK, 0, -yK, 1, 0, translateX, translateY, 1);
     console.log(m);
     ctx.save();
     let ele = m.elements;
@@ -116,8 +118,8 @@ function getFaceImage() {
         const faceIndex = frontFace[i];
         let fn = i === 0 ? 'moveTo' : 'lineTo';
         ctx[fn](
-            points[faceIndex].x - canvas.width / 2,
-            points[faceIndex].y - canvas.height / 2
+            points[faceIndex].x - translateX,
+            points[faceIndex].y - translateY
         );
     }
     ctx.closePath();
@@ -130,8 +132,8 @@ function getFaceImage() {
         minY * radio,
         (maxX - minX) * radio,
         (maxY - minY) * radio,
-        -canvas.width / 2 + minX,
-        -canvas.height / 2 + minY,
+        minX - translateX,
+        minY - translateY,
         maxX - minX,
         maxY - minY
     );
