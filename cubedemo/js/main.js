@@ -5,6 +5,7 @@ import BasicRubik from './object/Rubik02.js';
 // import TouchLine from './object/TouchLine.js';
 import Btn from './object/StaticBtn.js';
 import TWEEN from './tween/Tween.js';
+import HUD from './object/HUD.js';
 const Context = canvas.getContext('webgl');
 /**
  * [Main 主要类]
@@ -110,8 +111,8 @@ export default class Main {
         this.disorderBtn = new Btn(this, '打乱', 20, 100);
         this.changeBtn = new Btn(this, '换阶', 20, 180);
         this.tmBtn = new Btn(this, '还原', 20, 260);
-
-
+        this.hud = new HUD(this);
+        // this.hud.draw();
     }
     /**
      * 渲染
