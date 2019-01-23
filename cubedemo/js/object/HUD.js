@@ -58,7 +58,6 @@ export default class HUD {
             transparent: true
         });
         this.plane = new THREE.Mesh(geometry, material);
-        console.log(this.plane);
         this.plane.position.set(0, 0, this.main.camera.position.z/2);
         this.main.scene.add(this.plane);
         this.children = [];
@@ -66,14 +65,11 @@ export default class HUD {
     }
     /**
      * 添加内容
-     * @param {img|canvas} imgOBj 添加的内容
-     * @param {number} x 在屏幕中的x位置
-     * @param {number} y 在屏幕中的y位置
+     * @param {childObj} 
      * @return {void}
      */
-    addObject(img,x,y){
-        let imgOBj = {img,position:{x,y}};
-        this.children.push(imgOBj);
+    addObject(childObj){
+        this.children.push(childObj);
         this.draw();
     }
     /**
@@ -81,51 +77,6 @@ export default class HUD {
      * @return {void}
      */
     draw() {
-        this.ctx.clearRect(0, 0, this.realWidth,this.realHight);
-        let devicePixelRatio = this.devicePixelRatio;
-        // this.ctx.fillStyle = 'black';
-        // this.ctx.globalAlpha = 0.2;
-        // this.ctx.fillRect(0, 0, this.realWidth, this.realHight);
-        this.ctx.font = 48 * this.devicePixelRatio + 'px serif';
-        this.ctx.globalAlpha = 1;
-        this.ctx.fillText('Hello world', 100 * this.devicePixelRatio, 100 * this.devicePixelRatio);
-
-
-        let ctx = this.ctx;
-        ctx.save();
-        ctx.translate(200 * devicePixelRatio, 200 * devicePixelRatio);
-        ctx.rect(0,0,80*devicePixelRatio,60*devicePixelRatio);
-        ctx.lineWidth = 4 * devicePixelRatio;
-        ctx.strokeStyle = '#44b549';
-        ctx.stroke();
-        ctx.font = 24 * devicePixelRatio + 'px serif ';
-        ctx.textBaseline = 'middle';
-        ctx.textAlign = 'center';
-        ctx.fillText('重置', 42 * devicePixelRatio, 32 * devicePixelRatio);
-
-        ctx.restore();
-        ctx.save();
-        ctx.translate(300 * devicePixelRatio, 200 * devicePixelRatio);
-        let img = createBtn('测试');
-        ctx.drawImage(img, 0, 0, img.width * devicePixelRatio, img.height * devicePixelRatio);
-        ctx.restore();
-        
-        var loader = new THREE.TextureLoader();
-        loader.load('images/touchLine.png', (texture)=>{
-            ctx.save();
-            ctx.translate(0,300);
-            let img = texture.image;
-            ctx.drawImage(img, 0, 0, img.width * devicePixelRatio, img.height * devicePixelRatio);
-            ctx.restore();
-            this.updateTexture();
-        });
-        
-
-        // for (let i = 0; i < this.children.length; i++) {
-        //     let {img,position} = this.children[i];
-        //     let {x,y} = position;
-        //     this.ctx.drawImage(img, x * devicePixelRatio, y * devicePixelRatio, img.width * devicePixelRatio, img.height * devicePixelRatio);
-        // }
     }
     /**
      * 更新texture

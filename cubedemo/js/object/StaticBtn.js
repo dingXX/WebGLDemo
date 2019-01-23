@@ -5,25 +5,21 @@ import * as THREE from '../three/build/three.js';
  * @return  {texture}       贴片
  */
 function createBtn(txt) {
+    let devicePixelRatio = window.devicePixelRatio;
     let canvas = document.createElement('canvas');
-    canvas.width = 84;
-    canvas.height = 64;
+    canvas.width = 84 * devicePixelRatio;
+    canvas.height = 64 * devicePixelRatio;
     let ctx = canvas.getContext('2d');
     //在内部用某颜色的16px宽的线再画一个宽高为224的圆角正方形并用改颜色填充
-    ctx.beginPath();
-    ctx.moveTo(2, 2);
-    ctx.lineTo(80, 2);
-    ctx.lineTo(80, 60);
-    ctx.lineTo(2, 60);
-    ctx.closePath();
-    ctx.lineWidth = 4;
+    ctx.rect(2 * devicePixelRatio, 2 * devicePixelRatio, 80 * devicePixelRatio, 60 * devicePixelRatio);
+    ctx.lineWidth = 4 * devicePixelRatio;
     ctx.strokeStyle = '#44b549';
     ctx.stroke();
     ctx.fillStyle = 'black';
-    ctx.font = '24px serif';
+    ctx.font = 24 * devicePixelRatio + 'px serif';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
-    ctx.fillText(txt, 42, 32);
+    ctx.fillText(txt, 42 * devicePixelRatio, 32 * devicePixelRatio);
     var texture = new THREE.Texture(canvas);
     texture.needsUpdate = true;
     return texture;
@@ -44,7 +40,7 @@ export default class StaticBtn {
      */
     constructor(main, txt, x, y) {
         this.main = main;
-
+        let devicePixelRatio = window.devicePixelRatio;
         this.radio = this.main.originWidth / 750;
 
         //加载图片
@@ -56,8 +52,8 @@ export default class StaticBtn {
         let img = texture.image;
 
         //实际尺寸
-        this.realWidth = img.width;
-        this.realHeight = img.height;
+        this.realWidth = img.width / devicePixelRatio;
+        this.realHeight = img.height / devicePixelRatio;
         //在程序中的实体尺寸
         this.width = this.realWidth * this.radio;
         this.height = this.realHeight * this.radio;
