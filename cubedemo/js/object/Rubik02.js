@@ -263,6 +263,7 @@ export default class Rubik {
         }
         // rotateOnAxis(axis,angle);
         this.group.rotateOnAxis(new THREE.Vector3(1, 0, 1), 25 / 180 * Math.PI);
+        this.isActive = true;
     }
     /**
      * [resizeHeight 设置魔法在场景中的大小位置]
@@ -868,5 +869,17 @@ export default class Rubik {
     stringifyGesture(turnAxis, layerIndex, isAntiClock) {
         let obj = [turnAxis, layerIndex, +isAntiClock];
         return obj.join('_');
+    }
+    show() {
+        this.group.visible = true;
+        this.isActive = true;
+    }
+    /**
+     * 隐藏按钮
+     * @return {void}
+     */
+    hide() {
+        this.group.visible = false;
+        this.isActive = false;
     }
 }

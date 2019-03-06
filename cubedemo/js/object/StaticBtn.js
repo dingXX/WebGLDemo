@@ -1,4 +1,5 @@
 import * as THREE from '../three/build/three.js';
+
 /**
  * 生成按钮texture
  * @param   {string}  txt  按钮文字
@@ -38,7 +39,7 @@ export default class StaticBtn {
      *
      * @return  {void}
      */
-    constructor(main, txt, x, y) {
+    constructor(main, txt, x, y, touchFn) {
         this.main = main;
         let devicePixelRatio = window.devicePixelRatio;
         this.radio = this.main.originWidth / 750;
@@ -75,11 +76,10 @@ export default class StaticBtn {
         this.main.scene.add(this.plane);
         this.defaultPosition(x, y);
         this.enable();
-        // }, (xhr) => {
-        //     console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-        // }, (xhr) => {
-        //     console.log('An error happened');
-        // });
+        if (typeof touchFn === 'function') {
+            this.touchFn = touchFn;
+            this.bindEvent();
+        }
     }
 
     /**
@@ -145,5 +145,16 @@ export default class StaticBtn {
     hide(){
         this.plane.visible = false;
         this.disable();
+    }
+    touch(eve) {
+        var touchInfo = eve.touches[0];
+        if (this.isHover(touchInfo) && !this.main.isRotating) {
+            this.touchFn(eve);
+        }
+    }
+    bindEvent(){
+        wx.onTouchStart((eve) => {
+            this.touch(eve);
+        });
     }
 }

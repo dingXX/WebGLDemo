@@ -1,21 +1,4 @@
 import * as THREE from '../three/build/three.js';
-function createBtn(txt) {
-    let canvas = document.createElement('canvas');
-    canvas.width = 84;
-    canvas.height = 64;
-    let ctx = canvas.getContext('2d');
-    //在内部用某颜色的16px宽的线再画一个宽高为224的圆角正方形并用改颜色填充
-    ctx.rect(2,2,80,60);
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = '#44b549';
-    ctx.stroke();
-    ctx.fillStyle = 'black';
-    ctx.font = '24px serif';
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'center';
-    ctx.fillText(txt, 42, 32);
-    return canvas;
-}
 /**
  * 平视显示器
  */
@@ -34,8 +17,8 @@ export default class HUD {
         this.realHight = window.innerHeight * (this.realWidth / window.innerWidth);
 
         // 在程序中的实体大小
-        this.width = this.main.originWidth/2;
-        this.height = this.main.originHeight/2;
+        this.width = this.main.originWidth;
+        this.height = this.main.originHeight;
 
         this.screenWidth = window.innerWidth;
         this.screenHeight = window.innerHeight;
@@ -58,25 +41,23 @@ export default class HUD {
             transparent: true
         });
         this.plane = new THREE.Mesh(geometry, material);
-        this.plane.position.set(0, 0, this.main.camera.position.z/2);
-        this.main.scene.add(this.plane);
-        this.children = [];
-        this.draw();
-    }
-    /**
-     * 添加内容
-     * @param {childObj} 
-     * @return {void}
-     */
-    addObject(childObj){
-        this.children.push(childObj);
-        this.draw();
+        this.plane.position.set(0, 0, 0);
     }
     /**
      * 重绘
      * @return {void}
      */
-    draw() {
+    draw(img,x,y) {
+        console.log('draw');
+        let ctx = this.ctx;
+        let canvas = this.canvas;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // ctx.rect(0,0,canvas.width,canvas.height);
+        // ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        // ctx.fill();
+        // console.log(img);
+        ctx.drawImage(img, x, y, img.width, img.height);
+        this.updateTexture();
     }
     /**
      * 更新texture

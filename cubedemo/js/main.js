@@ -5,7 +5,7 @@ import BasicRubik from './object/Rubik02.js';
 // import TouchLine from './object/TouchLine.js';
 import Btn from './object/StaticBtn.js';
 import TWEEN from './tween/Tween.js';
-import HUD from './object/HUD.js';
+import RecognizeCube from './object/RecognizeCube.js';
 const Context = canvas.getContext('webgl');
 /**
  * [Main 主要类]
@@ -107,12 +107,44 @@ export default class Main {
         this.initEvent();
 
         // this.touchLine = new TouchLine(this);
-        this.resetBtn = new Btn(this, '重置', 20, 20);
-        this.disorderBtn = new Btn(this, '打乱', 20, 100);
-        this.changeBtn = new Btn(this, '换阶', 20, 180);
-        this.tmBtn = new Btn(this, '还原', 20, 260);
-        this.hud = new HUD(this);
+        this.resetBtn = new Btn(this, '重置', 20, 100,()=>{
+            this.frontRubik.reset();
+        });
+        this.disorderBtn = new Btn(this, '打乱', 20, 180,()=>{
+            this.randomRubik();
+        });
+        this.changeBtn = new Btn(this, '换阶', 20, 260,()=>{
+            this.changeRubik();
+        });
+        this.tmBtn = new Btn(this, '还原', 20, 340,()=>{
+            this.solveRubik();
+        });
+        // this.recognBtn = new Btn(this, '识别', 20, 340,()=>{
+        //     this.showRecognWrap();
+        // });
         // this.hud.draw();
+        // this.hideObject();
+    }
+    /**
+     * 隐藏部分内容
+     * @return {void}
+     */
+    hideObject() {
+        this.resetBtn.hide();
+        this.disorderBtn.hide();
+        this.changeBtn.hide();
+        this.tmBtn.hide();
+        this.frontRubik.hide();
+        this.recognBtn.hide();
+    }
+    /**
+     * 展示识别模块
+     * @return {void}
+     */
+    showRecognWrap() {
+        this.hideObject();
+        this.RecognizeCube = this.RecognizeCube || new RecognizeCube(this);
+        // this.RecognizeCube.show();
     }
     /**
      * 渲染
@@ -144,19 +176,7 @@ export default class Main {
         // if (touch.clientY >= this.touchLine.screenRect.top && touch.clientY <= this.touchLine.screenRect.top + this.touchLine.screenRect.height) {
         //     this.touchLine.enable();
         // } 
-        if (this.resetBtn.isHover(touch) && !this.isRotating) {
-            this.frontRubik.reset();
-            // this.backRubik.reset();
-        } else if (this.disorderBtn.isHover(touch) && !this.isRotating) {
-            this.randomRubik();
-            // var istrue = this.frontRubik.isRestore();
-            // console.log(istrue, 'isRestore');
-
-        } else if (this.changeBtn.isHover(touch) && !this.isRotating) {
-            this.changeRubik();
-        } else if (this.tmBtn.isHover(touch) && !this.isRotating) {
-            this.solveRubik();
-        } else {
+        if(this.frontRubik.isActive){
             this.getIntersects(touch);
             //触摸点在魔方上且魔方没有转动
             if (!this.isRotating) {
