@@ -160,9 +160,13 @@ export default class Main {
      * @return  {void}
      */
     initEvent() {
+        let that = this;
         wx.onTouchStart(this.touchStart.bind(this));
         wx.onTouchMove(this.touchMove.bind(this));
         wx.onTouchEnd(this.touchEnd.bind(this));
+        wx.onHide(()=>{
+            that.frontRubik && that.frontRubik.setCubeStateToStorage();
+        });
     }
     /**
      * 触摸事件
@@ -375,6 +379,7 @@ export default class Main {
         wx.showActionSheet({
             itemList,
             success(res) {
+                that.frontRubik && that.frontRubik.setCubeStateToStorage();
                 let layNum = +itemList[res.tapIndex];
                 that.changeLayNumRubik(layNum);
                 if (layNum === 3 || layNum === 2) {
@@ -455,11 +460,23 @@ export default class Main {
         if (this.frontRubik && this.frontRubik.params.layerNum === layerNum) {
             return;
         }
+        if (!layerNum) {
+            try {
+                layerNum = wx.getStorageSync('curLayNum');
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        layerNum = layerNum || 3;
         this.frontRubik && this.frontRubik.destroy();
         // this.backRubik && this.backRubik.destroy();
         this.frontRubik = new BasicRubik(this, layerNum);
         this.frontTypeName = 'front';
         this.frontRubik.model(this.frontTypeName);
+        wx.setStorage({
+            key: 'curLayNum',
+            data: layerNum
+        });
         // this.backRubik = new BasicRubik(this, layerNum);
         // this.backTypeName = 'back';
         // this.backRubik.model(this.backTypeName);

@@ -254,7 +254,6 @@ export default class Rubik {
         this.group.add(this.container);
         this.main.scene.add(this.group);
 
-
         //进行一定的旋转变换保证三个面可见
         if (type === 'front') {
             this.group.rotateY(45 / 180 * Math.PI);
@@ -264,6 +263,7 @@ export default class Rubik {
         // rotateOnAxis(axis,angle);
         this.group.rotateOnAxis(new THREE.Vector3(1, 0, 1), 25 / 180 * Math.PI);
         this.isActive = true;
+        this.getCubeStateFromStorage();
     }
     /**
      * [resizeHeight 设置魔法在场景中的大小位置]
@@ -661,6 +661,7 @@ export default class Rubik {
         for (let i = 0; i < this.cubes.length; i++) {
             // 父类的矩阵
             let matrix = this.cubes[i].matrix.clone();
+
             // 逆反矩阵
             matrix.getInverse(matrix);
             let cube = this.cubes[i];
@@ -668,6 +669,64 @@ export default class Rubik {
             for (let j = 0; j < this.initStatus.length; j++) {
                 let status = this.initStatus[j];
                 if ((cube.id - this.minCubeIndex) == status.cubeIndex) {
+                    cube.position.x = status.x;
+                    cube.position.y = status.y;
+                    cube.position.z = status.z;
+                    cube.cubeIndex = status.cubeIndex;
+                    break;
+                }
+            }
+        }
+        wx.removeStorage({
+            key: `matrixStr${this.params.layerNum}`
+        });
+    }
+    setCubeStateToStorage(){
+        let matrixList = [];
+        for (let i = 0; i < this.cubes.length; i++) {
+            let cube = this.cubes[i];
+            let matrixObj = {
+                i:cube.cubeIndex,
+                m:cube.matrix.clone()
+            };
+            matrixList.push(matrixObj);
+        }
+        let matrixStr = JSON.stringify(matrixList);
+        try {
+          wx.setStorageSync(`matrixStr${this.params.layerNum}`, matrixStr);
+        } catch (e) {
+            console.log(e)
+        }
+    }
+    getCubeStateFromStorage(){
+        let that = this;
+        wx.getStorage({
+            key: `matrixStr${this.params.layerNum}`,
+            success(res) {
+                let matrixList = res.data;
+                if (matrixList) {
+                    console.log('get matrixList');
+                    that.setCubeStateRender(JSON.parse(matrixList));
+                }
+            }
+        });
+    }
+    setCubeStateRender(matrixList){
+        for (let i = 0; i < matrixList.length; i++) {
+            let materialObj = matrixList[i];
+        }
+        for (let i = 0; i < this.cubes.length; i++) {
+            // 父类的矩阵
+            let matrix = this.cubes[i].matrix.clone();
+            let materialObj = matrixList[i];
+            // 逆反矩阵
+            matrix.getInverse(matrix);
+            let cube = this.cubes[i];
+            cube.applyMatrix(matrix);
+            cube.applyMatrix(materialObj.m);
+            for (let j = 0; j < this.initStatus.length; j++) {
+                let status = this.initStatus[j];
+                if (materialObj.i == status.cubeIndex) {
                     cube.position.x = status.x;
                     cube.position.y = status.y;
                     cube.position.z = status.z;
@@ -729,12 +788,18 @@ export default class Rubik {
         return true;
     }
     solve() {
-        let surfaces = ['U', 'R', 'F', 'D', 'L', 'B'];
+        
         let cubeStrFn = 'getCubeString' + this.params.layerNum;
         if (typeof this[cubeStrFn] !== 'function') {
             return;
         }
-        let cubeStr = this[cubeStrFn](surfaces);
+        let cubeStr = this[cubeStrFn]();
+        // let colors = this.getCubeStringNormal();
+        // for (let i = 0; i < colors.length; i++) {
+        //     colors[i] = colors[i].join('');
+        // }
+        // let cubeStr = colors.join('');
+        console.log(cubeStr);
         // 获取还原结果
         let result = Kociemba.solution(cubeStr);
         console.log(result);
@@ -746,7 +811,9 @@ export default class Rubik {
     /**
      * 获取3阶魔方的还原时需要的魔方字符串
      */
-    getCubeString3(surfaces) {
+    
+    getCubeString3() {
+        let surfaces = ['U', 'R', 'F', 'D', 'L', 'B'];
         let colorMap = {};
         let colors = [];
         let centerCube = '';
@@ -801,9 +868,11 @@ export default class Rubik {
         console.log(cubeStr);
         return cubeStr;
     }
-    getCubeString2(surfaces) {
-        surfaces = ['U', 'R', 'F', 'D', 'L', 'B'];
-
+    /**
+     * 获取2阶魔方的还原时需要的魔方字符串
+     */
+    getCubeString2() {
+        let surfaces = ['U', 'R', 'F', 'D', 'L', 'B'];
         let colors = [];
         // 右、 左、 上、 下、 前、 后
         let materialFaces = ['R', 'L', 'U', 'D', 'F', 'B'];
@@ -842,13 +911,91 @@ export default class Rubik {
             faceColors.splice(3, 0, surface,surface,surface);
             faceColors.splice(7, 0, surface);
             colors.push(faceColors.join(''));
-            
-
         }
         // 解决还原方法中对字符串的顺序要求URFDLB
         let cubeStr = colors.join('');
         console.log(cubeStr);
         return cubeStr;
+    }
+    getFaceCubeIndexMap(n){
+        // U: [(n-i-1)*n + j]
+        // R: [j*n +i],
+        // F: [n*i+j],
+        // D: [n*i+j],
+        // L: [j*n + (n-i) -1],
+        // B: [n*(i+1)-1-j]
+        let faceCubeIndexMap = {};
+        let surFacesFnMap = {
+            U:(i,j,n)=>{
+                return (n-i-1)*n + j;
+            },
+            R:(i,j,n)=>{
+                return j*n +i;
+            },
+            F:(i,j,n)=>{
+                return n*i+j;
+            },
+            D:(i,j,n)=>{
+                return n*i+j;
+            },
+            L:(i,j,n)=>{
+                return j*n + (n-i) -1;
+            },
+            B:(i,j,n)=>{
+                return n*(i+1)-1-j;
+            },
+        };
+        for (let face in surFacesFnMap) {
+            if (surFacesFnMap.hasOwnProperty(face)) {
+                let indexArr = [];
+                let fn = surFacesFnMap[face];
+                for (let i = 0; i < n; i++) {
+                    for (let j = 0; j < n; j++) {
+                        indexArr.push(fn(i,j,n));
+                    }
+                }
+                faceCubeIndexMap[face] = indexArr;
+            }
+        }
+        return faceCubeIndexMap;
+        
+    }
+    getCubeStringNormal(){
+        let surfaces = ['U', 'R', 'F', 'D', 'L', 'B'];
+        let colors = [];
+        // 右、 左、 上、 下、 前、 后
+        let materialFaces = ['R', 'L', 'U', 'D', 'F', 'B'];
+        
+        let FaceCubeIndexMap = this.getFaceCubeIndexMap(this.params.layerNum);
+        // 拼凑出还原需要的字符串
+        for (let i = 0; i < surfaces.length; i++) {
+            let surface = surfaces[i];
+            let gesture = this.ThirdGestureMap[surface];
+            let {
+                turnAxis,
+                isAntiClock
+            } = this.parseGesture(gesture);
+            let vector = this[turnAxis].clone();
+            if (isAntiClock) {
+                vector.negate();
+            }
+            let elements = this.getTurnBoxs(gesture);
+            let vec = this.getLocal2WorldVector(vector.clone());
+            let faceIndexFn = this.getFaceIndexFnMap[surface];
+            let faceColors = new Array(6);
+            for (let j = 0; j < elements.length; j++) {
+                let cubeMaterialIndex = this.getCubeColorByNormal(elements[j], vec);
+                let faceIndex = faceIndexFn(elements[j].cubeIndex);
+                faceIndex = FaceCubeIndexMap[surface][faceIndex];
+                faceColors[faceIndex] = materialFaces[cubeMaterialIndex];
+            }
+            // axaxxxaxa
+            // faceColors.splice(1,0,surface);
+            // faceColors.splice(3, 0, surface,surface,surface);
+            // faceColors.splice(7, 0, surface);
+            colors.push(faceColors);
+        }
+        return colors;
     }
     destroy() {
         this.main.scene.remove(this.group);
