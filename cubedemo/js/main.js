@@ -117,9 +117,12 @@ export default class Main {
         this.tmBtn = new Btn(this, '还原', 20, 340,()=>{
             this.solveRubik();
         });
-        // this.recognBtn = new Btn(this, '识别', 20, 340,()=>{
-        //     this.showRecognWrap();
-        // });
+        this.recognBtn = new Btn(this, '识别', 20, 420,()=>{
+            let str = this.frontRubik.getCubeStringNormal();
+            // console.log(str);
+            // let str = 'FDUBUBUURUUBURLBFRFLBDFFRUDDRLRDDULDDLLBLBFFFLRLDBRBFR';
+            this.frontRubik.stringToMatrixs(str);
+        });
         // this.hud.draw();
         // this.hideObject();
     }

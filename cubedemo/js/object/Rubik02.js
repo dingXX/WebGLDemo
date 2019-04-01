@@ -68,6 +68,7 @@ function createRubik(x, y, z, layerNum, cubeWidth, colors) {
     let cubegeo = new THREE.BoxGeometry(cubeWidth, cubeWidth, cubeWidth);
     // 生成小方块
     let cubeDemo = new THREE.Mesh(cubegeo, materials);
+    
     // 每层
     for (let i = 0; i < layerNum; i++) {
         // 一层9个
@@ -134,6 +135,7 @@ export default class Rubik {
             return parseInt(cubeIndex % num2 / num1);
         }
     };
+    // 将cubeindex从小到大转为在面上的index(0-9)
     getFaceIndexFnMap = {
         'F': (cubeIndex) => {
             return cubeIndex;
@@ -177,7 +179,7 @@ export default class Rubik {
         }
     };
 
-
+    resolveFaceOrder = ['F', 'B', 'L', 'R', 'U', 'D'];
     constructor(main, layerNum) {
         this.main = main;
         //默认转动动画时长
@@ -210,6 +212,7 @@ export default class Rubik {
             'L': this.stringifyGesture('xLine', 0, 1),
             'LA': this.stringifyGesture('xLine', 0, 0),
         };
+        console.log(this.ThirdGestureMap);
     }
     /**
      * [model 初始化魔方]
@@ -224,6 +227,11 @@ export default class Rubik {
         this.initStatus = [];
         // 生成魔方小方块
         this.cubes = createRubik(this.params.x, this.params.y, this.params.z, this.params.layerNum, this.params.cubeWidth, this.params.colors);
+        // 保留一分单个小方块，用于魔方手动创建时用
+        this.singleCube = this.cubes[0].clone();
+        this.singleCube.position.x = 0;
+        this.singleCube.position.y = 0;
+        this.singleCube.position.z = 0;
         // 获取小方块的最小索引值
         this.getMinCubeIndex();
         // 逐个小方块加入group
@@ -712,9 +720,6 @@ export default class Rubik {
         });
     }
     setCubeStateRender(matrixList){
-        for (let i = 0; i < matrixList.length; i++) {
-            let materialObj = matrixList[i];
-        }
         for (let i = 0; i < this.cubes.length; i++) {
             // 父类的矩阵
             let matrix = this.cubes[i].matrix.clone();
@@ -724,16 +729,7 @@ export default class Rubik {
             let cube = this.cubes[i];
             cube.applyMatrix(matrix);
             cube.applyMatrix(materialObj.m);
-            for (let j = 0; j < this.initStatus.length; j++) {
-                let status = this.initStatus[j];
-                if (materialObj.i == status.cubeIndex) {
-                    cube.position.x = status.x;
-                    cube.position.y = status.y;
-                    cube.position.z = status.z;
-                    cube.cubeIndex = status.cubeIndex;
-                    break;
-                }
-            }
+            cube.cubeIndex = materialObj.i;
         }
     }
     /**
@@ -813,7 +809,7 @@ export default class Rubik {
      */
     
     getCubeString3() {
-        let surfaces = ['U', 'R', 'F', 'D', 'L', 'B'];
+        let surfaces = this.resolveFaceOrder;
         let colorMap = {};
         let colors = [];
         let centerCube = '';
@@ -872,7 +868,7 @@ export default class Rubik {
      * 获取2阶魔方的还原时需要的魔方字符串
      */
     getCubeString2() {
-        let surfaces = ['U', 'R', 'F', 'D', 'L', 'B'];
+        let surfaces = this.resolveFaceOrder;
         let colors = [];
         // 右、 左、 上、 下、 前、 后
         let materialFaces = ['R', 'L', 'U', 'D', 'F', 'B'];
@@ -961,7 +957,7 @@ export default class Rubik {
         
     }
     getCubeStringNormal(){
-        let surfaces = ['U', 'R', 'F', 'D', 'L', 'B'];
+        let surfaces = this.resolveFaceOrder;
         let colors = [];
         // 右、 左、 上、 下、 前、 后
         let materialFaces = ['R', 'L', 'U', 'D', 'F', 'B'];
@@ -989,13 +985,147 @@ export default class Rubik {
                 faceIndex = FaceCubeIndexMap[surface][faceIndex];
                 faceColors[faceIndex] = materialFaces[cubeMaterialIndex];
             }
+            faceColors = faceColors.join('');
             // axaxxxaxa
             // faceColors.splice(1,0,surface);
             // faceColors.splice(3, 0, surface,surface,surface);
             // faceColors.splice(7, 0, surface);
             colors.push(faceColors);
         }
-        return colors;
+        return colors.join('');
+    }
+    stringToMatrixs(str) {
+        console.log(str);
+        let matrixs = [];
+        let totalNum = this.params.layerNum*this.params.layerNum;
+        let surfaces = this.resolveFaceOrder;
+        if (str.length!== 6*totalNum) {
+            throw Error('字符串的个数不对');
+        }
+        let faceStrMap = {};
+        for (let i= 0; i < surfaces.length; i++) {
+            faceStrMap[surfaces[i]] = str.slice(i*totalNum,(i+1)*totalNum);
+        }
+        const faceIndexMap = this.getFaceCubeIndexMap(this.params.layerNum);
+        for (let i = 0; i < this.initStatus.length; i++) {
+            let status = this.initStatus[i];
+            let cubeIndex = status.cubeIndex;
+            let outFace = [];
+            for (let face in this.getFaceIndexFnMap) {
+                if (this.getFaceIndexFnMap.hasOwnProperty(face)) {
+
+                    let num = this.getFaceIndexFnMap[face](cubeIndex);
+                    
+                    // 转为面index时，属于0-9的就认为是属于这个面的
+                    if (num>=0 && num<totalNum) {
+                        let gesture = this.ThirdGestureMap[face];
+                        let {turnAxis,layerIndex} =  this.parseGesture(gesture);
+                        let layerNum = this.getLayerIndexFnMap[turnAxis](cubeIndex);
+                        if (layerNum===layerIndex) {
+                            let strIndex = faceIndexMap[face][num];
+                            let faceValue = faceStrMap[face].slice(strIndex, strIndex + 1);
+                            outFace.push({
+                                face:face,
+                                color:faceValue
+                            });
+                        }
+                    }
+                }
+            }
+            // 确定单个cube有哪些对外的面
+            // 
+            console.log(cubeIndex, JSON.stringify(outFace));
+            let matrix = this.getMatrixFromFaceStatus(outFace);
+            matrix.setPosition(new THREE.Vector3(status.x, status.y, status.z));
+            matrixs.push({
+                i: cubeIndex,
+                m: matrix
+            });
+        }
+        this.setCubeStateRender(matrixs);
+
+    }
+    getMatrixFromFaceStatus(faceStatus){
+        let faceColorMap = {
+            F:'蓝',
+            B:'绿',
+            L:'红',
+            R:'橙',
+            U:'白',
+            D:'黄'
+        };
+        let faceList = Object.keys(faceColorMap);
+
+        let FACE_ORDER_MAP = {
+            xLine: ['U', 'B', 'D', 'F'],
+            yLine: ['F', 'L', 'B', 'R'],
+            zLine: ['U', 'R', 'D', 'L']
+        };
+        faceStatus.forEach(status => {
+            status.color = faceColorMap[status.color];
+;        });
+        let matrix = new THREE.Matrix4();
+        let turnAxis = '';
+        let turnCount = Math.min(faceStatus.length,2);
+        let turnNum = 0;
+        while(turnNum<turnCount){
+            let tFaceStatus = faceStatus[turnNum];
+            if (!tFaceStatus) {
+                // 没有数据
+                break;
+            }
+            let {face:sFace,color } = tFaceStatus;
+            let tFace = faceList.find(face => faceColorMap[face]===color);
+            // 源面的手势和方向
+            let sGesture = this.ThirdGestureMap[sFace];
+            let { turnAxis: sAxis } = this.parseGesture(sGesture);
+            let tGesture = this.ThirdGestureMap[tFace];
+            let { turnAxis: tAxis } = this.parseGesture(tGesture);
+            if (sFace!==tFace) {
+                // 源面颜色和目标颜色不一致
+                let turnAttr = ['xLine', 'yLine', 'zLine'];
+                if (turnAxis === sAxis || turnAxis === tAxis) {
+                    // 指定的旋转方向和实际的面是同一方向的话，是转不了的
+                    throw Error('getMatrixFromFaceStatus_旋转轴不能与面的轴一致');
+                }
+                if (!turnAxis) {
+                    // 没有定义旋转轴，就根据两个面去确定
+                    let faceAxis = [sAxis, tAxis];
+                    for (let i = 0; i < faceAxis.length; i++) {
+                        let index = turnAttr.indexOf(faceAxis[i]);
+                        if (index > -1) {
+                            turnAttr.splice(index, 1);
+                        }
+                    }
+                    turnAxis = turnAttr[0];
+                }
+                let faceOrder = FACE_ORDER_MAP[turnAxis];
+                let sOrder = faceOrder.indexOf(sFace);
+                let tOrder = faceOrder.indexOf(tFace);
+                if (!~sOrder || !~tOrder) {
+                    throw Error('getMatrixFromFaceStatus_要旋转的面不在对应的轴顺序中');
+                }
+                let stepNum = sOrder - tOrder;
+                let angle = -stepNum / 2 * Math.PI;
+                let turn = turnAxis.slice(0, 1).toLocaleUpperCase();
+                let turnMatrix = new THREE.Matrix4();
+                turnMatrix[`makeRotation${turn}`](angle);
+                matrix.premultiply(turnMatrix);
+                let newFaceColorMap = {};
+                faceOrder.forEach((face, index) => {
+                    let newFaceIndex = (index - stepNum + 4) % 4;
+                    let newFace = faceOrder[newFaceIndex];
+                    let newColor = faceColorMap[newFace];
+                    newFaceColorMap[face] = newColor;
+                });
+                faceColorMap = Object.assign(faceColorMap, newFaceColorMap);
+                console.log(stepNum, turnAxis);
+            }
+            // 目标面已经相同，不用再处理
+            turnAxis = sAxis;
+            turnNum++;
+        }
+        return matrix;
     }
     destroy() {
         this.main.scene.remove(this.group);
