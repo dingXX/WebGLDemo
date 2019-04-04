@@ -2,6 +2,7 @@
 import * as THREE from './three/build/three.js';
 // require('./three/build/OrbitControls.js');
 import BasicRubik from './object/Rubik02.js';
+import TRubik from './object/rubik/TRubik';
 import Btn from './object/StaticBtn.js';
 import TWEEN from './tween/Tween.js';
 import RecognizeCube from './object/RecognizeCube.js';
@@ -118,10 +119,10 @@ export default class Main {
             this.solveRubik();
         });
         this.recognBtn = new Btn(this, '识别', 20, 420,()=>{
-            let str = this.frontRubik.getCubeStringNormal();
-            // console.log(str);
-            // let str = 'FDUBUBUURUUBURLBFRFLBDFFRUDDRLRDDULDDLLBLBFFFLRLDBRBFR';
-            this.frontRubik.stringToMatrixs(str);
+            let str = this.frontRubik.getRubikFaceStr(0);
+            console.log(str);
+            // str = 'FDUBUBUURUUBURLBFRFLBDFFRUDDRLRDDULDDLLBLBFFFLRLDBRBFR';
+            this.frontRubik.rubikStr2rubikState(str);
         });
         // this.hud.draw();
         // this.hideObject();
@@ -166,7 +167,7 @@ export default class Main {
         wx.onTouchMove(this.touchMove.bind(this));
         wx.onTouchEnd(this.touchEnd.bind(this));
         wx.onHide(()=>{
-            that.frontRubik && that.frontRubik.setCubeStateToStorage();
+            that.frontRubik && that.frontRubik.saveRubikStateToStorage();
         });
     }
     /**
@@ -336,6 +337,10 @@ export default class Main {
         });
         let gestureList = this.frontRubik.solve();
         wx.hideLoading();
+        if (!gestureList) {
+            this.solving = false;
+            return;
+        }
         this.frontRubik.rotateMoveFromList(gestureList, () => {
             console.log('frontRubik_solving_over');
             this.solving = false;
@@ -351,7 +356,7 @@ export default class Main {
         wx.showActionSheet({
             itemList,
             success(res) {
-                that.frontRubik && that.frontRubik.setCubeStateToStorage();
+                that.frontRubik && that.frontRubik.saveRubikStateToStorage();
                 let layNum = +itemList[res.tapIndex];
                 that.changeLayNumRubik(layNum);
                 if (layNum === 3 || layNum === 2) {
@@ -420,7 +425,7 @@ export default class Main {
      * @return  {void}
      */
     changeLayNumRubik(layerNum = 3) {
-        if (this.frontRubik && this.frontRubik.params.layerNum === layerNum) {
+        if (this.frontRubik && this.frontRubik.layerNum === layerNum) {
             return;
         }
         if (!layerNum) {
@@ -432,7 +437,8 @@ export default class Main {
         }
         layerNum = layerNum || 3;
         this.frontRubik && this.frontRubik.destroy();
-        this.frontRubik = new BasicRubik(this, layerNum);
+        // this.frontRubik = new BasicRubik(this, layerNum);
+        this.frontRubik = new TRubik(this, layerNum);
         this.frontTypeName = 'front';
         this.frontRubik.model(this.frontTypeName);
         wx.setStorage({

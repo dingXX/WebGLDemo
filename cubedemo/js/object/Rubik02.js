@@ -210,7 +210,7 @@ export default class Rubik {
             'R': this.stringifyGesture('xLine', lastLayerIndex, 0),
             'RA': this.stringifyGesture('xLine', lastLayerIndex, 1),
             'L': this.stringifyGesture('xLine', 0, 1),
-            'LA': this.stringifyGesture('xLine', 0, 0),
+            'LA': this.stringifyGesture('xLine', 0, 0)
         };
         console.log(this.ThirdGestureMap);
     }
@@ -227,11 +227,6 @@ export default class Rubik {
         this.initStatus = [];
         // 生成魔方小方块
         this.cubes = createRubik(this.params.x, this.params.y, this.params.z, this.params.layerNum, this.params.cubeWidth, this.params.colors);
-        // 保留一分单个小方块，用于魔方手动创建时用
-        this.singleCube = this.cubes[0].clone();
-        this.singleCube.position.x = 0;
-        this.singleCube.position.y = 0;
-        this.singleCube.position.z = 0;
         // 获取小方块的最小索引值
         this.getMinCubeIndex();
         // 逐个小方块加入group
@@ -271,7 +266,7 @@ export default class Rubik {
         // rotateOnAxis(axis,angle);
         this.group.rotateOnAxis(new THREE.Vector3(1, 0, 1), 25 / 180 * Math.PI);
         this.isActive = true;
-        this.getCubeStateFromStorage();
+        this.getRubikStateFromStorage();
     }
     /**
      * [resizeHeight 设置魔法在场景中的大小位置]
@@ -663,7 +658,6 @@ export default class Rubik {
             randomGestureList.push(gesture);
         }
         return randomGestureList;
-
     }
     reset() {
         for (let i = 0; i < this.cubes.length; i++) {
@@ -689,7 +683,7 @@ export default class Rubik {
             key: `matrixStr${this.params.layerNum}`
         });
     }
-    setCubeStateToStorage(){
+    saveRubikStateToStorage() {
         let matrixList = [];
         for (let i = 0; i < this.cubes.length; i++) {
             let cube = this.cubes[i];
@@ -706,7 +700,7 @@ export default class Rubik {
             console.log(e)
         }
     }
-    getCubeStateFromStorage(){
+    getRubikStateFromStorage(){
         let that = this;
         wx.getStorage({
             key: `matrixStr${this.params.layerNum}`,
