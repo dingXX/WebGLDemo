@@ -1,4 +1,4 @@
-import * as THREE from '../three/build/three.js';
+import * as THREE from '../three/build/three.min.js';
 
 /**
  * 生成按钮texture

@@ -1,7 +1,6 @@
 /*global canvas wx*/
-import * as THREE from './three/build/three.js';
+import * as THREE from './three/build/three.min.js';
 // require('./three/build/OrbitControls.js');
-import BasicRubik from './object/Rubik02.js';
 import TRubik from './object/rubik/TRubik';
 import Btn from './object/StaticBtn.js';
 import TWEEN from './tween/Tween.js';
@@ -437,7 +436,6 @@ export default class Main {
         }
         layerNum = layerNum || 3;
         this.frontRubik && this.frontRubik.destroy();
-        // this.frontRubik = new BasicRubik(this, layerNum);
         this.frontRubik = new TRubik(this, layerNum);
         this.frontTypeName = 'front';
         this.frontRubik.model(this.frontTypeName);
