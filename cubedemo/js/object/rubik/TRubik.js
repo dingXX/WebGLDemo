@@ -56,11 +56,7 @@ export default class TRubik extends BaseRubik {
             cubeWidth,
             colors
         } = this.params;
-        this.cubes = this.createRubik({
-            x,
-            y,
-            z
-        }, layerNum, cubeWidth, colors);
+        this.cubes = this.createRubik(layerNum, cubeWidth, colors);
         // 获取小方块的最小索引值
         let minCubeId = this.getMinCubeId();
         // 逐个小方块加入group
@@ -84,24 +80,24 @@ export default class TRubik extends BaseRubik {
             this.group.add(cube);
         });
         // 外层透明大方块
-        this.container = util.createTransparencyMesh({
-            x,
-            y,
-            z
-        }, (cubeWidth + 1) * layerNum);
+        this.container = util.createTransparencyMesh((cubeWidth + 1) * layerNum);
         this.container.name = 'coverCube';
         this.group.add(this.container);
         this.main.scene.add(this.group);
         //进行一定的旋转变换保证三个面可见
         if (type === 'front') {
-            this.group.rotateY(45 / 180 * Math.PI);
+            this.group.rotateY(-45 / 180 * Math.PI);
         } else if (type === 'back') {
-            this.group.rotateY((45 + 180) / 180 * Math.PI);
+            this.group.rotateY((-45 + 180) / 180 * Math.PI);
         }
         // rotateOnAxis(axis,angle);
-        this.group.rotateOnAxis(new THREE.Vector3(1, 0, 1), 25 / 180 * Math.PI);
+        this.group.rotateOnAxis(new THREE.Vector3(1, 0, -1), 25 / 180 * Math.PI);
         this.isActive = true;
         this.getRubikStateFromStorage();
+        this.group.position.x = x;
+        this.group.position.y = y;
+        this.group.position.z = z;
+
     }
     /**
      * 获取方块列表中的最小索引值
@@ -117,27 +113,18 @@ export default class TRubik extends BaseRubik {
     /**
      * 创建魔方的各个方块
      *
-     * @param  {object} position  魔方原点位置
-     * @param  {number} position.x         魔方原点位置X
-     * @param  {number} position.y         魔方原点位置Y
-     * @param  {number} position.z         魔方原点位置Z
      * @param  {Number} layerNum  魔方层级
      * @param  {number} cubeWidth 魔方方块的宽度
      * @param  {array} colors     魔方颜色数组(右、左、上、下、前、后)
      *
      * @return {Array}           魔方小方块mesh实例数据
      */
-    createRubik(position, layerNum, cubeWidth, colors) {
+    createRubik(layerNum, cubeWidth, colors) {
         let cubes = [];
-        let {
-            x,
-            y,
-            z
-        } = position;
         // 左上角的小方块的中心点位置
-        let leftUpCx = x - (layerNum / 2 - 0.5) * cubeWidth;
-        let leftUpCy = y + (layerNum / 2 - 0.5) * cubeWidth;
-        let leftUpCz = z + (layerNum / 2 - 0.5) * cubeWidth;
+        let leftUpCx = -(layerNum / 2 - 0.5) * cubeWidth;
+        let leftUpCy = (layerNum / 2 - 0.5) * cubeWidth;
+        let leftUpCz = (layerNum / 2 - 0.5) * cubeWidth;
         // 生成材质贴片，每个面一个颜色
         let materials = [];
         for (let k = 0; k < 6; k++) {
@@ -305,23 +292,23 @@ export default class TRubik extends BaseRubik {
             break;
         case angle > 60 && angle <= 120:
             // 2点方向
-            turnAxis = 'zLine';
+            turnAxis = 'xLine';
             isAntiClock = 0;
             break;
         case angle > 240 && angle <= 300:
             // 8点方向
-            turnAxis = 'zLine';
+            turnAxis = 'xLine';
             isAntiClock = 1;
             break;
         case angle > 120 && angle <= 180:
             // 11点方向
-            turnAxis = 'xLine';
-            isAntiClock = 0;
+            turnAxis = 'zLine';
+            isAntiClock = 1;
             break;
         case angle > 300 && angle <= 360:
             // 5点方向
-            turnAxis = 'xLine';
-            isAntiClock = 1;
+            turnAxis = 'zLine';
+            isAntiClock = 0;
             break;
         }
         if (typeName === 'back' && (turnAxis === 'zLine' || turnAxis === 'xLine')) {
@@ -329,7 +316,7 @@ export default class TRubik extends BaseRubik {
             turnAxis = turnAxis === 'zLine' ? 'xLine' : 'zLine';
         }
         let gesture = this.constructor.stringifyGesture(turnAxis, layerIndex, isAntiClock);
-        // console.log(gesture);
+        console.log(gesture);
         return gesture;
     }
     /**
@@ -440,7 +427,7 @@ export default class TRubik extends BaseRubik {
                 if (typeof cb === 'function') {
                     cb();
                 }
-            }, totalTime, this.origin);
+            }, totalTime);
         });
     }
     /**

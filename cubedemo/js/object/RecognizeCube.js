@@ -1,4 +1,4 @@
-import * as THREE from '../three/build/three.js';
+import * as THREE from '../three/build/three.min.js';
 import HUD from './HUD';
 function createFace() {
     let canvas = document.createElement('canvas');

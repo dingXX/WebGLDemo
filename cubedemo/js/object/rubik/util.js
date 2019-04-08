@@ -35,20 +35,11 @@ export function createFace(rgbaColor) {
 /**
  * 创建透明的外层正方体,用于包围魔方， 主要是确定触摸时所在面
  *
- * @param  {object} position 方块的位置
- * @param  {number} position.x 方块的位置X坐标
- * @param  {number} position.y 方块的位置Y坐标
- * @param  {number} position.z 方块的位置Z坐标
  * @param  {number} cubeWidth 方块宽度
  *
  * @return {Object}           外层透明大方块mesh实例
  */
-export function createTransparencyMesh(position, cubeWidth) {
-    let {
-        x,
-        y,
-        z
-    } = position;
+export function createTransparencyMesh(cubeWidth) {
     let cubegeo = new THREE.BoxGeometry(cubeWidth, cubeWidth, cubeWidth);
     let cubemat = new THREE.MeshBasicMaterial({
         vertexColors: THREE.FaceColors,
@@ -56,36 +47,19 @@ export function createTransparencyMesh(position, cubeWidth) {
         transparent: true
     });
     let cube = new THREE.Mesh(cubegeo, cubemat);
-    cube.position.x = x;
-    cube.position.y = y;
-    cube.position.z = z;
     return cube;
 }
 
 /**
  * 获取实际的转动矩阵
- * @param {Vector3} p 旋转原点
  * @param {vector3} vector 旋转轴
  * @param {number} rad 旋转角度
  * @returns {Matrix4} 旋转矩阵
  */
-export function getRotateAroundWorldMatrix(p, vector, rad) {
+export function getRotateAroundWorldMatrix(vector, rad) {
     vector.normalize();
-    let u = vector.x;
-    let v = vector.y;
-    let w = vector.z;
-
-    let a = p.x;
-    let b = p.y;
-    let c = p.z;
-
     let matrix4 = new THREE.Matrix4();
-
-    matrix4.set(u * u + (v * v + w * w) * Math.cos(rad), u * v * (1 - Math.cos(rad)) - w * Math.sin(rad), u * w * (1 - Math.cos(rad)) + v * Math.sin(rad), (a * (v * v + w * w) - u * (b * v + c * w)) * (1 - Math.cos(rad)) + (b * w - c * v) * Math.sin(rad),
-        u * v * (1 - Math.cos(rad)) + w * Math.sin(rad), v * v + (u * u + w * w) * Math.cos(rad), v * w * (1 - Math.cos(rad)) - u * Math.sin(rad), (b * (u * u + w * w) - v * (a * u + c * w)) * (1 - Math.cos(rad)) + (c * u - a * w) * Math.sin(rad),
-        u * w * (1 - Math.cos(rad)) - v * Math.sin(rad), v * w * (1 - Math.cos(rad)) + u * Math.sin(rad), w * w + (u * u + v * v) * Math.cos(rad), (c * (u * u + v * v) - w * (a * u + b * v)) * (1 - Math.cos(rad)) + (a * v - b * u) * Math.sin(rad),
-        0, 0, 0, 1);
-
+    matrix4.makeRotationAxis(vector, rad);
     return matrix4;
 }
 /**
@@ -99,11 +73,10 @@ export function getRotateAroundWorldMatrix(p, vector, rad) {
  * @param  {number} laststamp    上一次时间戳
  * @param  {function} callback     回调函数
  * @param  {number} totalTime    总持续时间
- * @param {vector3} originVec 旋转原点
  * 
  * @return {void}             
  */
-export function rotateAnimation(cubes, lineVector, isAntiClock, currentstamp, startstamp, laststamp, callback, totalTime, originVec) {
+export function rotateAnimation(cubes, lineVector, isAntiClock, currentstamp, startstamp, laststamp, callback, totalTime) {
     //动画是否结束
     let isAnimationEnd = false;
     if (startstamp === 0) {
@@ -116,14 +89,14 @@ export function rotateAnimation(cubes, lineVector, isAntiClock, currentstamp, st
         currentstamp = startstamp + totalTime;
     }
     // 获取当前时间的旋转矩阵
-    let rotateMatrix = getRotateAroundWorldMatrix(originVec, lineVector, isAntiClock * 90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+    let rotateMatrix = getRotateAroundWorldMatrix(lineVector, isAntiClock * 90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
     // 应用旋转矩阵
     cubes.forEach(cube => {
         cube.applyMatrix(rotateMatrix);
     });
     if (!isAnimationEnd) {
         requestAnimationFrame((timestamp) => {
-            rotateAnimation(cubes, lineVector, isAntiClock, timestamp, startstamp, currentstamp, callback, totalTime, originVec);
+            rotateAnimation(cubes, lineVector, isAntiClock, timestamp, startstamp, currentstamp, callback, totalTime);
         });
     } else if (typeof callback === 'function') {
         callback();
