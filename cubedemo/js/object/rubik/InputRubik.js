@@ -9,7 +9,7 @@ import {
     transfromRubikStrToResolve
 } from './util';
 import Search from '../../algorithm/Kociemba';
-const boxY = 400;
+const boxY = 60 * window.devicePixelRatio * 3;
 export default class InputRubki extends HUD {
     /**
      * 构造函数
@@ -148,7 +148,7 @@ export default class InputRubki extends HUD {
         ctx.save();
         ctx.font = `${34*devicePixelRatio}px serif`;
         ctx.textBaseline = 'middle';
-        ctx.fillText('<返回', 40 * devicePixelRatio, 50 * devicePixelRatio);
+        ctx.fillText('<返回', 40 * devicePixelRatio, 100 * devicePixelRatio);
         ctx.restore();
     }
     drawBtn(){
@@ -264,7 +264,7 @@ export default class InputRubki extends HUD {
             touchFace && this.inputFace(touchFace);
             return;
         }
-        if (touchX< 300 && touchY<200) {
+        if (touchX< 400 && touchY<400) {
             if (typeof this.doneFn === 'function') {
                 this.doneFn();
             }

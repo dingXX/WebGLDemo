@@ -133,6 +133,7 @@ export default class Main {
      * @return {void}
      */
     hideObject() {
+        this.hiding = true;
         this.resetBtn.hide();
         this.disorderBtn.hide();
         this.changeBtn.hide();
@@ -147,6 +148,7 @@ export default class Main {
         this.tmBtn.show();
         this.frontRubik.show();
         this.recognBtn.show();
+        this.hiding = false;
     }
     /**
      * 展示识别模块
@@ -192,6 +194,9 @@ export default class Main {
      * @return  {void}
      */
     touchStart(eve) {
+        if (this.hiding) {
+            return;
+        }
         var touch = eve.touches[0];
         this.startPoint = touch;
 
@@ -211,6 +216,9 @@ export default class Main {
      * @return  {void}
      */
     touchMove(eve) {
+        if (this.hiding) {
+            return;
+        }
         var touch = eve.touches[0];
 
         // 滑动点在魔方上且魔方没有转动
