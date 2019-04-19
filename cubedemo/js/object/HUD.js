@@ -26,7 +26,8 @@ export default class HUD {
         this.radio = this.main.originWidth / this.realWidth;
         // 实体大小和屏幕的尺寸关系
         this.uiRadio = this.main.originWidth / window.innerWidth;
-
+        // 屏幕尺寸与实际尺寸比
+        this.srRadio = this.screenWidth / this.realWidth;
         this.canvas = document.createElement('canvas');
         this.ctx = this.canvas.getContext('2d');
         this.canvas.width = this.realWidth;
@@ -47,16 +48,12 @@ export default class HUD {
      * 重绘
      * @return {void}
      */
-    draw(img,x,y) {
+    draw(image) {
         console.log('draw');
         let ctx = this.ctx;
         let canvas = this.canvas;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // ctx.rect(0,0,canvas.width,canvas.height);
-        // ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        // ctx.fill();
-        // console.log(img);
-        ctx.drawImage(img, x, y, img.width, img.height);
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
         this.updateTexture();
     }
     /**
@@ -69,5 +66,14 @@ export default class HUD {
         this.plane.material.setValues({
             map: texture
         });
+    }
+    getRealPixel(x){
+        return x/this.srRadio;
+    }
+    show(){
+        this.main.scene.add(this.plane);
+    }
+    hide(){
+        this.main.scene.remove(this.plane);
     }
 }

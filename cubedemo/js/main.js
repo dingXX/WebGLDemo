@@ -4,7 +4,8 @@ import * as THREE from './three/build/three.min.js';
 import TRubik from './object/rubik/TRubik';
 import Btn from './object/StaticBtn.js';
 import TWEEN from './tween/Tween.js';
-import RecognizeCube from './object/RecognizeCube.js';
+// import RecognizeCube from './object/RecognizeCube.js';
+import InputRubik from './object/rubik/InputRubik';
 const Context = canvas.getContext('webgl');
 /**
  * [Main 主要类]
@@ -118,10 +119,11 @@ export default class Main {
             this.solveRubik();
         });
         this.recognBtn = new Btn(this, '识别', 20, 420,()=>{
-            let str = this.frontRubik.getRubikFaceStr(0);
-            console.log(str);
+            // let str = this.frontRubik.getRubikFaceStr(0);
+            // console.log(str);
             // str = 'FDUBUBUURUUBURLBFRFLBDFFRUDDRLRDDULDDLLBLBFFFLRLDBRBFR';
-            this.frontRubik.rubikStr2rubikState(str);
+            // this.frontRubik.rubikStr2rubikState(str);
+            this.showRecognWrap();
         });
         // this.hud.draw();
         // this.hideObject();
@@ -138,14 +140,28 @@ export default class Main {
         this.frontRubik.hide();
         this.recognBtn.hide();
     }
+    showObject(){
+        this.resetBtn.show();
+        this.disorderBtn.show();
+        this.changeBtn.show();
+        this.tmBtn.show();
+        this.frontRubik.show();
+        this.recognBtn.show();
+    }
     /**
      * 展示识别模块
      * @return {void}
      */
     showRecognWrap() {
         this.hideObject();
-        this.RecognizeCube = this.RecognizeCube || new RecognizeCube(this);
-        // this.RecognizeCube.show();
+        let layNum = this.frontRubik.layerNum;
+        this[`inputRubik${layNum}`] = this[`inputRubik${layNum}`] || new InputRubik(this, layNum, (faceStr) => {
+            console.log(faceStr);
+            this[`inputRubik${layNum}`].hide();
+            this.showObject();
+            this.frontRubik.rubikStr2rubikState(faceStr);
+        });
+        this[`inputRubik${layNum}`].show();
     }
     /**
      * 渲染

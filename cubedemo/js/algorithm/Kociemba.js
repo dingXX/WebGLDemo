@@ -1168,6 +1168,26 @@ var Search = {
         }
         return s;
     },
+    isVerify: function (facelets) {
+        if (!generatedTable) {
+            console.log('generatedTable');
+            generateTables();
+        }
+        var count = new Int32Array(6);
+        try {
+            for (var i = 0; i < 54; i++)
+                count[Color.valueOf(facelets.charAt(i)).ordinal()]++;
+        } catch (e) {
+            return false;
+        }
+        for (var i = 0; i < 6; i++)
+            if (count[i] != 9)
+                return false;
+
+        var fc = new FaceCube(facelets);
+        var cc = fc.toCubieCube();
+        return !cc.verify();
+    },
     solution: function (facelets, maxDepth = 40, timeOut = 10, useSeparator) {
         var s;
 
@@ -1377,7 +1397,6 @@ var Search = {
         return depthPhase1 + depthPhase2;
     }
 };
-console.log('kociemba.js');
 export default Search;
 // var x = Search.solution('FFDLUFUUDRURBRUBDLRRBDFLRFDURLFDRURDLUFLLBBDBFLUBBDFBL');
 // console.log(x);
