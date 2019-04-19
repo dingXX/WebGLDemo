@@ -9,6 +9,7 @@ import {
     transfromRubikStrToResolve
 } from './util';
 import Search from '../../algorithm/Kociemba';
+const boxY = 400;
 export default class InputRubki extends HUD {
     /**
      * 构造函数
@@ -107,7 +108,7 @@ export default class InputRubki extends HUD {
         let ctx = this.ctx;
         let canvas = this.canvas;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        let TxtY = this.sixBoxCanvas.height + 300;
+        let TxtY = this.sixBoxCanvas.height + boxY + 50;
         ctx.drawImage(
             this.txtCanvas,
             0,
@@ -118,12 +119,37 @@ export default class InputRubki extends HUD {
         ctx.drawImage(
             this.sixBoxCanvas,
             0,
-            250,
+            boxY,
             this.sixBoxCanvas.width,
             this.sixBoxCanvas.height
         );
-
+        this.drawBackbtn();
         this.updateTexture();
+    }
+    showErr(errTxt){
+        let devicePixelRatio = window.devicePixelRatio;
+        let ctx = this.ctx;
+        let canvas = this.canvas;
+        ctx.save();
+        ctx.font = `${34*devicePixelRatio}px serif`;
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'red';
+        let txtArr = errTxt.split('<br/>');
+        txtArr.forEach((txt,i)=>{
+            ctx.fillText(txt, canvas.width / 2, (i + 2) * 50 * devicePixelRatio);
+        });
+        ctx.restore();
+    }
+    drawBackbtn(){
+        let devicePixelRatio = window.devicePixelRatio;
+        let ctx = this.ctx;
+        let canvas = this.canvas;
+        ctx.save();
+        ctx.font = `${34*devicePixelRatio}px serif`;
+        ctx.textBaseline = 'middle';
+        ctx.fillText('<返回', 40 * devicePixelRatio, 50 * devicePixelRatio);
+        ctx.restore();
     }
     drawBtn(){
         let devicePixelRatio = window.devicePixelRatio;
@@ -220,9 +246,9 @@ export default class InputRubki extends HUD {
         let touch = eve.touches[0];
         let touchY = this.getRealPixel(touch.clientY);
         let touchX = this.getRealPixel(touch.clientX);
-        if (touchY > 200 && touchY < this.sixBoxCanvas.height + 200) {
+        if (touchY > boxY && touchY < this.sixBoxCanvas.height + boxY) {
             // 在展开图范围内
-            let j = ~~((touchY-200) / this.boxWidth);
+            let j = ~~((touchY - boxY) / this.boxWidth);
             let i = ~~(touchX / this.boxWidth);
             let touchFace = '';
             for (const face in boxPositionEnum) {
@@ -235,28 +261,41 @@ export default class InputRubki extends HUD {
                 }
             }
             console.log(touchFace);
-            this.inputFace(touchFace);
+            touchFace && this.inputFace(touchFace);
+            return;
+        }
+        if (touchX< 300 && touchY<200) {
+            if (typeof this.doneFn === 'function') {
+                this.doneFn();
+            }
         }
     }
     keyBoardComplete(res) {
-        console.log(res.value);
         this.inputting = 0;
-        this.updateInputFaceValue(res.value);
+        this.updateInputFaceValue(res.value,this.inputtingFace);
         console.log('keyBoardComplete');
         if (this.checkInPutAll()) {
             this.getFaceStr();
         }
     }
     keyBoardInput(res){
+        console.log('keyBoardInput');
         let inputValue = res.value;
-        this.updateInputFaceValue(inputValue);
+        this.updateInputFaceValue(inputValue,this.inputtingFace);
     }
-    updateInputFaceValue(value){
+    updateInputFaceValue(value,face){
         let formatValue = value.toLocaleLowerCase().replace(/[^bgorwy]/g, '');
-        this.faceColorObj[this.inputtingFace] = formatValue;
-        this.updateBoxCanvas(this.inputtingFace, 1);
+        this.faceColorObj[face] = formatValue;
+        this.updateBoxCanvas(face, 1);
     }
     inputFace(face){
+        this.inputtingFace = face;
+        if (this.inputting) {
+            wx.updateKeyboard({
+                value: this.faceColorObj[face]
+            });
+            return;
+        }
         this.inputting = 1;
         wx.showKeyboard({
             defaultValue: this.faceColorObj[face],
@@ -266,7 +305,6 @@ export default class InputRubki extends HUD {
                 this.inputting = 0;
             }
         });
-        this.inputtingFace = face;
     }
     checkInPutAll(){
         let faceArr = Object.values(this.faceColorObj);
@@ -298,6 +336,8 @@ export default class InputRubki extends HUD {
             if (typeof this.doneFn === 'function') {
                 this.doneFn(faceStr);
             }
+        }else{
+            this.showErr('当前输入的颜色值无法生成合法魔方<br/>请重新校对并输入');
         }
     }
 }

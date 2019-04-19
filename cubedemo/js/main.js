@@ -118,7 +118,7 @@ export default class Main {
         this.tmBtn = new Btn(this, '还原', 20, 340,()=>{
             this.solveRubik();
         });
-        this.recognBtn = new Btn(this, '识别', 20, 420,()=>{
+        this.recognBtn = new Btn(this, '输入', 20, 420,()=>{
             // let str = this.frontRubik.getRubikFaceStr(0);
             // console.log(str);
             // str = 'FDUBUBUURUUBURLBFRFLBDFFRUDDRLRDDULDDLLBLBFFFLRLDBRBFR';
@@ -156,10 +156,11 @@ export default class Main {
         this.hideObject();
         let layNum = this.frontRubik.layerNum;
         this[`inputRubik${layNum}`] = this[`inputRubik${layNum}`] || new InputRubik(this, layNum, (faceStr) => {
-            console.log(faceStr);
             this[`inputRubik${layNum}`].hide();
             this.showObject();
-            this.frontRubik.rubikStr2rubikState(faceStr);
+            if (faceStr) {
+                this.frontRubik.rubikStr2rubikState(faceStr);
+            }
         });
         this[`inputRubik${layNum}`].show();
     }
