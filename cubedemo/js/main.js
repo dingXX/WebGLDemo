@@ -385,8 +385,10 @@ export default class Main {
                 that.changeLayNumRubik(layNum);
                 if (layNum === 3 || layNum === 2) {
                     that.tmBtn.show();
+                    that.recognBtn.show();
                 }else{
                     that.tmBtn.hide();
+                    that.recognBtn.hide();
                 }
             }
         });

@@ -283,7 +283,7 @@ export default class InputRubki extends HUD {
         let inputValue = res.value;
         this.updateInputFaceValue(inputValue,this.inputtingFace);
     }
-    updateInputFaceValue(value,face){
+    updateInputFaceValue(value = '',face){
         let formatValue = value.toLocaleLowerCase().replace(/[^bgorwy]/g, '');
         this.faceColorObj[face] = formatValue;
         this.updateBoxCanvas(face, 1);
@@ -317,7 +317,6 @@ export default class InputRubki extends HUD {
     }
     getFaceStr(){
         let faceStr = resolveFaceOrder.map(faceOder => this.faceColorObj[faceOder]).join('').toLocaleLowerCase();
-        console.log('colorStr', faceStr);
         let colors = Object.keys(colorEnum);
         // debugger;
         colors.forEach(color => {
@@ -327,7 +326,7 @@ export default class InputRubki extends HUD {
         console.log('oldFaceStr', faceStr);
         let resolveStr = transfromRubikStrToResolve(faceStr);
         wx.showLoading({
-            title: '检测中...',
+            title: '合法性检测中...',
         });
         let isVerify = Search.isVerify(resolveStr);
         console.log(resolveStr, isVerify);
