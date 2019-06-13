@@ -46,7 +46,7 @@ export default class Main {
         this.anotherRubik; //非目标魔方
         this.startPoint; //触摸点
         this.movePoint; //滑动点
-        this.isRotating = false; //魔方是否正在转动
+        this.disabled = false; //魔方是否正在转动
     }
     /**
      * [initRender 初始化]
@@ -203,7 +203,7 @@ export default class Main {
         if(this.frontRubik.isActive){
             this.getIntersects(touch);
             //触摸点在魔方上且魔方没有转动
-            if (!this.isRotating) {
+            if (!this.disabled) {
                 //开始转动，设置起始点
                 this.startPoint = this.intersect ? this.intersect.point : (new THREE.Vector2(touch.clientX, touch.clientY));
             }
@@ -222,7 +222,7 @@ export default class Main {
         var touch = eve.touches[0];
 
         // 滑动点在魔方上且魔方没有转动
-        if (!this.isRotating && this.startPoint && this.targetRubik) {
+        if (!this.disabled && this.startPoint && this.targetRubik) {
             let rubikTypeName = this.getIntersects(touch);
             if (!this.intersect) {
                 this.movePoint = new THREE.Vector2(touch.clientX, touch.clientY);
@@ -256,7 +256,7 @@ export default class Main {
      * @return  {void}
      */
     rotateRubik(rubikTypeName) {
-        this.isRotating = true; //转动标识置为true
+        this.disabled = true; //转动标识置为true
         var sub = this.movePoint.sub(this.startPoint); //计算转动向量
         // var direction = this.targetRubik.getDirection(sub, this.normalize); //计算转动方向
         let gesture;
@@ -337,14 +337,14 @@ export default class Main {
      * @return  {void}
      */
     randomRubik(cb) {
-        if (this.randoming) {
+        if (this.disabled) {
             return;
         }
-        this.randoming = true;
+        this.disabled = true;
         let gestureList = this.frontRubik.getRandomGestureList();
         this.frontRubik.rotateMoveFromList(gestureList, () => {
             console.log('frontRubik_random_over');
-            this.randoming = false;
+            this.disabled = false;
         },100);
     }
     /**
@@ -352,22 +352,22 @@ export default class Main {
      * @return {void}
      */
     solveRubik(){
-        if (this.solving) {
+        if (this.disabled) {
             return;
         }
-        this.solving = true;
+        this.disabled = true;
         wx.showLoading({
             title: '还原计算中...',
         });
         let gestureList = this.frontRubik.solve();
         wx.hideLoading();
         if (!gestureList) {
-            this.solving = false;
+            this.disabled = false;
             return;
         }
         this.frontRubik.rotateMoveFromList(gestureList, () => {
             console.log('frontRubik_solving_over');
-            this.solving = false;
+            this.disabled = false;
         });
     }
     /**
@@ -398,7 +398,7 @@ export default class Main {
      * @return  {void}
      */
     resetRotateParams() {
-        this.isRotating = false;
+        this.disabled = false;
         this.targetRubik = null;
         this.anotherRubik = null;
         this.intersect = null;
