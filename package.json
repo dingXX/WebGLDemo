@@ -11,7 +11,7 @@
   "dependencies": {
     "@tweenjs/tween.js": "^17.2.0",
     "cuon-matrix-ts": "^1.1.0",
-    "three": "^0.84.0"
+    "three": "^0.125.0"
   },
   "devDependencies": {
     "css-loader": "^0.23.1",
