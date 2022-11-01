@@ -20,7 +20,7 @@
     "eslint-config-futu": "^1.0.3",
     "exports-loader": "^0.6.3",
     "extend": "^3.0.0",
-    "gulp": "^3.9.1",
+    "gulp": "^4.0.2",
     "gulp-connect": "^5.0.0",
     "gulp-plumber": "^1.0.1",
     "gulp-postcss": "^6.4.0",
